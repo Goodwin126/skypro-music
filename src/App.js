@@ -1,14 +1,13 @@
-import logo from "./logo.svg";
-import "./App.css";
+import "./css/App.css";
+import { Main } from "./сomponent/MainComponent";
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <a className="App-link">Здесь скоро будет Skypro.Music</a>
-      </header>
+      <div className="wrapper">
+        <Main />
+      </div>
     </div>
   );
 }
-
 export default App;
