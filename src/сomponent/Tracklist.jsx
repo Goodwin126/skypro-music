@@ -1,4 +1,6 @@
 import { PlaylistItem } from "./playlistItem";
+import { SkeletonItem } from "./SkeletonItem";
+import { SearchByMenu } from "./SearchByMenu";
 
 const tracks = [
   {
@@ -66,7 +68,7 @@ const tracks = [
   },
 ];
 
-export function TrackList() {
+export function TrackList({ isLoading }) {
   return (
     <div className="main__centerblock centerblock">
       <div className="centerblock__search search">
@@ -81,14 +83,8 @@ export function TrackList() {
         />
       </div>
       <h2 className="centerblock__h2">Треки</h2>
-      <div className="centerblock__filter filter">
-        <div className="filter__title">Искать по:</div>
-        <div className="filter__button button-author _btn-text">
-          исполнителю
-        </div>
-        <div className="filter__button button-year _btn-text">году выпуска</div>
-        <div className="filter__button button-genre _btn-text">жанру</div>
-      </div>
+      <SearchByMenu />
+
       <div className="centerblock__content">
         <div className="content__title playlist-title">
           <div className="playlist-title__col col01">Трек</div>
@@ -100,16 +96,24 @@ export function TrackList() {
             </svg>
           </div>
         </div>
+
         <div className="content__playlist playlist">
-          {tracks.map((track) => (
-            <PlaylistItem
-              trackTitle={track.trackTitle}
-              trackAuthor={track.trackAuthor}
-              trackAlbum={track.trackAlbum}
-              trackTime={track.trackTime}
-              sprite={"/img/icon/sprite.svg"}
-            />
-          ))}
+          {isLoading
+            ? // Показываем 8 скелетонов (
+              Array.from({ length: 8 }).map((_, index) => (
+                <SkeletonItem key={index} />
+              ))
+            : // Показываем реальные треки
+              tracks.map((track, index) => (
+                <PlaylistItem
+                  key={index}
+                  trackTitle={track.trackTitle}
+                  trackAuthor={track.trackAuthor}
+                  trackAlbum={track.trackAlbum}
+                  trackTime={track.trackTime}
+                  sprite={"/img/icon/sprite.svg"}
+                />
+              ))}
         </div>
       </div>
     </div>

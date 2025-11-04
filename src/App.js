@@ -1,25 +1,13 @@
 import "./css/App.css";
-import { Navmenu } from "./сomponent/NavMenu";
-import { TrackList } from "./сomponent/Tracklist";
-import { AudioPlayer } from "./сomponent/AudioPlayer";
-import { Sidebar } from "./сomponent/Sidebar.jsx";
+import { Main } from "./сomponent/MainComponent";
 
 function App() {
   return (
     <div className="App">
       <div className="wrapper">
-        <div className="container">
-          <main className="main">
-            <Navmenu />
-            <TrackList />
-            <Sidebar />
-          </main>
-          <AudioPlayer />
-          <footer className="footer"></footer>
-        </div>
+        <Main />
       </div>
     </div>
   );
 }
-
 export default App;

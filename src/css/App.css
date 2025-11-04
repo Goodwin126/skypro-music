@@ -730,6 +730,12 @@ body {
   flex-direction: row;
 }
 
+.skeleton {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
 .track-play__contain {
   width: auto;
   display: -ms-grid;
@@ -878,4 +884,47 @@ body {
 
 .volume__progress-line {
   width: 109px;
+}
+
+.search-by-category {
+  position: relative;
+}
+
+.search-by-items_list {
+  width: auto;
+  position: absolute;
+  transform: translateY(20px);
+  border-radius: 12px;
+  gap: 10px;
+  margin-top: 10px;
+  background-color: rgba(49, 49, 49, 1);
+  border-radius: 12px;
+  max-height: 305px;
+  overflow-y: auto;
+  border: 34px solid rgba(49, 49, 49, 1);
+  display: flex;
+  gap: 16px;
+  flex-direction: column;
+}
+.search-by-item {
+  padding-right: 10px;
+  font-family: StratosSkyeng;
+  font-weight: 400;
+  font-style: Regular;
+  font-size: 20px;
+  line-height: 24px;
+  color: rgba(255, 255, 255, 1);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.search-by-item:hover {
+  color: rgba(182, 114, 255, 1);
+  font-family: StratosSkyeng;
+  font-weight: 400;
+  font-style: Regular;
+  font-size: 20px;
+  line-height: 24px;
+  text-decoration: underline;
+  text-decoration-style: solid;
 }

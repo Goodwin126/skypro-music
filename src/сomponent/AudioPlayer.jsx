@@ -1,4 +1,7 @@
-export function AudioPlayer() {
+import { TrackPlay } from "./TrakePlay";
+import { SkelitonAudioPlay } from "./SkelitonAudioPlayer";
+
+export function AudioPlayer({ isLoading }) {
   return (
     <div className="bar">
       <div className="bar__content">
@@ -34,23 +37,7 @@ export function AudioPlayer() {
             </div>
 
             <div className="player__track-play track-play">
-              <div className="track-play__contain">
-                <div className="track-play__image">
-                  <svg className="track-play__svg" alt="music">
-                    <use href={`${"/img/icon/sprite.svg"}#icon-note`}></use>
-                  </svg>
-                </div>
-                <div className="track-play__author">
-                  <a className="track-play__author-link" href="http://">
-                    Ты та...
-                  </a>
-                </div>
-                <div className="track-play__album">
-                  <a className="track-play__album-link" href="http://">
-                    Баста
-                  </a>
-                </div>
-              </div>
+              {isLoading ? <SkelitonAudioPlay /> : <TrackPlay />}
 
               <div className="track-play__like-dis">
                 <div className="track-play__like _btn-icon">
