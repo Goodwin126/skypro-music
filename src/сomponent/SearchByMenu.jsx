@@ -8,6 +8,7 @@ const listSingers = [
   "Arctic Monkeys",
   "Valeriy Leontev",
   "Alla Pugacheva",
+  "Agata Kristy",
 ];
 const listYears = ["1990", "2000", "2010"];
 
