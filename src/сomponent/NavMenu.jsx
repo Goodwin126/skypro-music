@@ -1,5 +1,64 @@
 import React from "react";
+import styled from "styled-components";
+
 const { useState } = React;
+
+const StyledMainNav = styled.nav`
+  width: 244px;
+  background-color: #181818;
+  padding: 20px 0 20px 36px;
+`;
+
+const StyledNavLogo = styled.div`
+  width: 113.33px;
+  height: 43px;
+  padding: 13px 0;
+  background-color: transparent;
+  margin-bottom: 20px;
+`;
+
+const StyledLogoImage = styled.img`
+  width: 113.33px;
+  height: 17px;
+  color: #181818;
+`;
+
+const StyledNavBurger = styled.div`
+  width: 20px;
+  gap: 5px;
+  padding: 13px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+`;
+
+const StyledBurgerLine = styled.span`
+  display: inline-block;
+  width: 100%;
+  height: 1px;
+  background-color: #d3d3d3;
+`;
+
+const StyledNavMenu = styled.div`
+  display: block;
+  visibility: visible;
+`;
+
+const StyledMenuList = styled.ul`
+  padding: 18px 0 10px 0;
+`;
+
+const StyledMenuItem = styled.li`
+  padding: 5px 0;
+  margin-bottom: 16px;
+`;
+
+const StyledMenuLink = styled.a`
+  color: #ffffff;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+`;
 
 export function Navmenu() {
   const [visible, setVisible] = useState();
@@ -7,36 +66,30 @@ export function Navmenu() {
   const toggleVisibility = () => setVisible(!visible);
 
   return (
-    <nav className="main__nav nav">
-      <div className="nav__logo logo">
-        <img className="logo__image" src={"/img/logo.png"} alt="logo" />
-      </div>
-      <div onClick={toggleVisibility} className="nav__burger burger">
-        <span className="burger__line"></span>
-        <span className="burger__line"></span>
-        <span className="burger__line"></span>
-      </div>
+    <StyledMainNav>
+      <StyledNavLogo>
+        <StyledLogoImage src="/img/logo.png" alt="logo" />
+      </StyledNavLogo>
+      <StyledNavBurger onClick={toggleVisibility}>
+        <StyledBurgerLine />
+        <StyledBurgerLine />
+        <StyledBurgerLine />
+      </StyledNavBurger>
       {visible && (
-        <div className="nav__menu menu">
-          <ul className="menu__list">
-            <li className="menu__item">
-              <a href="#section" className="menu__link">
-                Главное
-              </a>
-            </li>
-            <li className="menu__item">
-              <a href="#section" className="menu__link">
-                Мой плейлист
-              </a>
-            </li>
-            <li className="menu__item">
-              <a href="../signin.html" className="menu__link">
-                Войти
-              </a>
-            </li>
-          </ul>
-        </div>
+        <StyledNavMenu>
+          <StyledMenuList>
+            <StyledMenuItem>
+              <StyledMenuLink href="#section">Главное</StyledMenuLink>
+            </StyledMenuItem>
+            <StyledMenuItem>
+              <StyledMenuLink href="#section">Мой плейлист</StyledMenuLink>
+            </StyledMenuItem>
+            <StyledMenuItem>
+              <StyledMenuLink href="../signin.html">Войти</StyledMenuLink>
+            </StyledMenuItem>
+          </StyledMenuList>
+        </StyledNavMenu>
       )}
-    </nav>
+    </StyledMainNav>
   );
 }

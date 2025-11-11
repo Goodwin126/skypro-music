@@ -1,24 +1,35 @@
+import {
+  StyledPlaylistItem,
+  StyledPlaylistTrack,
+  StyledTrackTitle,
+  StyledTrackTitleImage,
+  StyledTrackTitleSvg,
+  StyledTrackTitleText,
+  StyledTrackAuthor,
+  StyledtrackAlbum,
+} from "./playlistItem";
+
 export function SkeletonItem() {
   return (
-    <div className="playlist__item">
-      <div className="playlist__track track">
-        <div className="track__title">
-          <div className="track__title-image">
-            <svg className="track__title-svg" alt="music">
+    <StyledPlaylistItem>
+      <StyledPlaylistTrack>
+        <StyledTrackTitle>
+          <StyledTrackTitleImage>
+            <StyledTrackTitleSvg alt="music">
               <img alt="square" src="/img/skelitons/Skeleton_square.svg" />
-            </svg>
-          </div>
-          <div className="track__title-text">
+            </StyledTrackTitleSvg>
+          </StyledTrackTitleImage>
+          <StyledTrackTitleText>
             <img alt="square" src="/img/skelitons/Skeleton_rectangle01.svg" />
-          </div>
-        </div>
-        <div className="track__author">
+          </StyledTrackTitleText>
+        </StyledTrackTitle>
+        <StyledTrackAuthor>
           <img alt="square" src="/img/skelitons/Skeleton_rectangle02.svg" />
-        </div>
-        <div className="track__album">
+        </StyledTrackAuthor>
+        <StyledtrackAlbum>
           <img alt="square" src="/img/skelitons/Skeleton_rectangle03.svg" />
-        </div>
-      </div>
-    </div>
+        </StyledtrackAlbum>
+      </StyledPlaylistTrack>
+    </StyledPlaylistItem>
   );
 }
