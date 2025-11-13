@@ -1,19 +1,28 @@
+import {
+  StyledPlayerTrackPlay,
+  StyledTrackPlayContain,
+  StyledTrackPlayImage,
+  StyledTrackPlaySvg,
+  StyledTrackPlayAlbum,
+  StyledTrackPlayAuthor,
+} from "./TrakePlay";
+
 export function SkelitonAudioPlay() {
   return (
-    <div className="player__track-play track-play">
-      <div className="track-play__contain">
-        <div className="track-play__image">
-          <svg className="track-play__svg" alt="music">
+    <StyledPlayerTrackPlay>
+      <StyledTrackPlayContain>
+        <StyledTrackPlayImage>
+          <StyledTrackPlaySvg alt="music">
             <img alt="square" src="/img/skelitons/Skeleton_square.svg" />
-          </svg>
-        </div>
-        <div className="track-play__author">
+          </StyledTrackPlaySvg>
+        </StyledTrackPlayImage>
+        <StyledTrackPlayAuthor>
           <img alt="square" src="/img/skelitons/Skeleton_rectangle04.svg" />
-        </div>
-        <div className="track-play__album">
+        </StyledTrackPlayAuthor>
+        <StyledTrackPlayAlbum>
           <img alt="square" src="/img/skelitons/Skeleton_rectangle04.svg" />
-        </div>
-      </div>
-    </div>
+        </StyledTrackPlayAlbum>
+      </StyledTrackPlayContain>
+    </StyledPlayerTrackPlay>
   );
 }

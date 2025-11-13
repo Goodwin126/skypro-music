@@ -3,6 +3,21 @@ import { TrackList } from "./Tracklist";
 import { AudioPlayer } from "./AudioPlayer";
 import { Sidebar } from "./Sidebar.jsx";
 import React, { useState, useEffect } from "react";
+import styled from "styled-components";
+
+const StyledContainer = styled.div`
+  max-width: 1920px;
+  height: 100vh;
+  margin: 0 auto;
+  position: relative;
+  background-color: #181818;
+`;
+
+const StyledMain = styled.main`
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: space-between;
+`;
 
 export function Main() {
   const [isLoading, setIsLoading] = useState(true);
@@ -15,14 +30,14 @@ export function Main() {
   }, []);
 
   return (
-    <div className="container">
-      <main className="main">
+    <StyledContainer>
+      <StyledMain>
         <Navmenu />
         <TrackList isLoading={isLoading} />
         <Sidebar isLoading={isLoading} />
-      </main>
+      </StyledMain>
       <AudioPlayer isLoading={isLoading} />
       <footer className="footer"></footer>
-    </div>
+    </StyledContainer>
   );
 }
