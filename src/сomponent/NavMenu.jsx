@@ -1,6 +1,8 @@
 import React from "react";
 import styled from "styled-components";
 
+import { Link } from "react-router-dom";
+
 const { useState } = React;
 
 const StyledMainNav = styled.nav`
@@ -53,7 +55,7 @@ const StyledMenuItem = styled.li`
   margin-bottom: 16px;
 `;
 
-const StyledMenuLink = styled.a`
+const StyledMenuLink = styled(Link)`
   color: #ffffff;
   font-weight: 400;
   font-size: 16px;
@@ -79,13 +81,13 @@ export function Navmenu() {
         <StyledNavMenu>
           <StyledMenuList>
             <StyledMenuItem>
-              <StyledMenuLink href="#section">Главное</StyledMenuLink>
+              <StyledMenuLink to="/">Главное</StyledMenuLink>
             </StyledMenuItem>
             <StyledMenuItem>
-              <StyledMenuLink href="#section">Мой плейлист</StyledMenuLink>
+              <StyledMenuLink to="/my-playlist">Мой плейлист</StyledMenuLink>
             </StyledMenuItem>
             <StyledMenuItem>
-              <StyledMenuLink href="../signin.html">Войти</StyledMenuLink>
+              <StyledMenuLink to="/login">Выйти</StyledMenuLink>
             </StyledMenuItem>
           </StyledMenuList>
         </StyledNavMenu>

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import styled from "styled-components";
 
 export const StyledSidebarItem = styled.div`
@@ -14,15 +15,15 @@ export const StyledSidebarImg = styled.img`
   height: auto;
 `;
 
-const StyledSidebarLink = styled.a`
+const StyledSidebarLink = styled(Link)`
   width: 100%;
   height: 100%;
 `;
 
-export function SidebarItem({ playlist, link }) {
+export function SidebarItem({ playlist, id }) {
   return (
     <StyledSidebarItem>
-      <StyledSidebarLink href={link}>
+      <StyledSidebarLink to={`/collections/${id}`}>
         <StyledSidebarImg src={playlist} alt="day's playlist" />
       </StyledSidebarLink>
     </StyledSidebarItem>

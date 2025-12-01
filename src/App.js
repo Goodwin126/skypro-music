@@ -1,6 +1,6 @@
-import "./css/App.css";
-import { Main } from "./сomponent/MainComponent";
+import { useState } from "react";
 import styled, { createGlobalStyle } from "styled-components";
+import { AppRoutes } from "./routes";
 
 const GlobalStyle = createGlobalStyle`
   /* Сброс базовых стилей */
@@ -59,12 +59,27 @@ const StyledWrapper = styled.div`
 `;
 
 function App() {
+  const [user, setUser] = useState(null);
+
+  const handleLogin = () => {
+    const newUser = localStorage.getItem("user");
+    setUser(newUser);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+  };
+
   return (
     <>
       <GlobalStyle />
       <div className="App">
         <StyledWrapper>
-          <Main />
+          <AppRoutes
+            user={user}
+            onAuthButtonClick={user ? handleLogout : handleLogin}
+          />
         </StyledWrapper>
       </div>
     </>

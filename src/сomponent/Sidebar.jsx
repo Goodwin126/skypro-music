@@ -33,9 +33,9 @@ export function Sidebar({ isLoading }) {
             <SidbarSkeliton />
           ) : (
             <>
-              <SidebarItem playlist="/img/playlist01.png" link="#section" />
-              <SidebarItem playlist="/img/playlist02.png" link="#section" />
-              <SidebarItem playlist="/img/playlist03.png" link="#section" />
+              <SidebarItem playlist="/img/playlist01.png" id="1" />
+              <SidebarItem playlist="/img/playlist02.png" id="2" />
+              <SidebarItem playlist="/img/playlist03.png" id="3" />
             </>
           )}
         </StyledSidebarList>
