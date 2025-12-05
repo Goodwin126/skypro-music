@@ -62,6 +62,8 @@ function App() {
   const [user, setUser] = useState(null);
 
   const handleLogin = () => {
+    localStorage.clear();
+    localStorage.setItem("user", "tadam");
     const newUser = localStorage.getItem("user");
     setUser(newUser);
   };
