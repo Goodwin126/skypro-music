@@ -59,13 +59,13 @@ const StyledWrapper = styled.div`
 `;
 
 function App() {
-  const [user, setUser] = useState(null);
+  const storedUser = localStorage.getItem("user");
+
+  const [user, setUser] = useState(storedUser ? storedUser : null);
 
   const handleLogin = () => {
-    localStorage.clear();
     localStorage.setItem("user", "tadam");
-    const newUser = localStorage.getItem("user");
-    setUser(newUser);
+    setUser("tadam");
   };
 
   const handleLogout = () => {
