@@ -19,7 +19,7 @@ const StyledMain = styled.main`
   justify-content: space-between;
 `;
 
-export function Main() {
+export function Main({ onAuthButtonClick }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -32,9 +32,9 @@ export function Main() {
   return (
     <StyledContainer>
       <StyledMain>
-        <Navmenu />
+        <Navmenu onAuthButtonClick={onAuthButtonClick} />
         <TrackList isLoading={isLoading} />
-        <Sidebar isLoading={isLoading} />
+        <Sidebar isLoading={isLoading} onAuthButtonClick={onAuthButtonClick} />
       </StyledMain>
       <AudioPlayer isLoading={isLoading} />
       <footer className="footer"></footer>

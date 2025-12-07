@@ -21,9 +21,9 @@ const StyledSidebarIcon = styled.div`
   border-radius: 50%;
   cursor: pointer;
 `;
-export function SideBarPersonal({ sprite }) {
+export function SideBarPersonal({ sprite, onAuthButtonClick }) {
   return (
-    <StyledSidebarPersonalt>
+    <StyledSidebarPersonalt onClick={onAuthButtonClick}>
       {" "}
       <StyledSidebarPersonalName>Sergey.Ivanov</StyledSidebarPersonalName>{" "}
       <StyledSidebarIcon>

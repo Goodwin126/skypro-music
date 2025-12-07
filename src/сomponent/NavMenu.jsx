@@ -62,7 +62,7 @@ const StyledMenuLink = styled(Link)`
   line-height: 24px;
 `;
 
-export function Navmenu() {
+export function Navmenu({ onAuthButtonClick }) {
   const [visible, setVisible] = useState();
 
   const toggleVisibility = () => setVisible(!visible);
@@ -87,7 +87,7 @@ export function Navmenu() {
               <StyledMenuLink to="/my-playlist">Мой плейлист</StyledMenuLink>
             </StyledMenuItem>
             <StyledMenuItem>
-              <StyledMenuLink to="/login">Выйти</StyledMenuLink>
+              <StyledMenuLink onClick={onAuthButtonClick}>Выйти</StyledMenuLink>
             </StyledMenuItem>
           </StyledMenuList>
         </StyledNavMenu>

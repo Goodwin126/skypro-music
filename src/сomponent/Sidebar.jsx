@@ -22,10 +22,13 @@ const StyledSidebarList = styled.div`
   align-items: center;
 `;
 
-export function Sidebar({ isLoading }) {
+export function Sidebar({ isLoading, onAuthButtonClick }) {
   return (
     <StyledMainSidebar>
-      <SideBarPersonal sprite="/img/icon/sprite.svg" />
+      <SideBarPersonal
+        sprite="/img/icon/sprite.svg"
+        onAuthButtonClick={onAuthButtonClick}
+      />
 
       <StyledSidebarBlock>
         <StyledSidebarList>

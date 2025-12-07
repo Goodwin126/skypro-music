@@ -46,7 +46,7 @@ export const AppRoutes = ({ user, onAuthButtonClick }) => {
         path="/"
         element={
           <ProtectedRoute isAllowed={Boolean(user)}>
-            <Main />
+            <Main onAuthButtonClick={onAuthButtonClick} />
           </ProtectedRoute>
         }
       ></Route>
