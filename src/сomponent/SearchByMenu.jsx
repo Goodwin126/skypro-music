@@ -1,4 +1,91 @@
 import React, { useState } from "react";
+import styled from "styled-components";
+
+const StyledCenterblockFilter = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 51px;
+`;
+
+const StyledFilterTitle = styled.div`
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  margin-right: 15px;
+`;
+
+const StyledSearchByCategory = styled.div`
+  position: relative;
+`;
+
+const StyledSearchByItemsList = styled.div`
+  width: auto;
+  position: absolute;
+  transform: translateY(20px);
+  border-radius: 12px;
+  gap: 10px;
+  margin-top: 10px;
+  background-color: rgba(49, 49, 49, 1);
+  max-height: 305px;
+  overflow-y: auto;
+  border: 34px solid rgba(49, 49, 49, 1);
+  display: flex;
+  gap: 16px;
+  flex-direction: column;
+`;
+
+const StyledSearchByItem = styled.div`
+  padding-right: 10px;
+  font-family: StratosSkyeng;
+  font-weight: 400;
+  font-style: Regular;
+  font-size: 20px;
+  line-height: 24px;
+  color: rgba(255, 255, 255, 1);
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:hover {
+    color: rgba(182, 114, 255, 1);
+    font-family: StratosSkyeng;
+    font-weight: 400;
+    font-style: Regular;
+    font-size: 20px;
+    line-height: 24px;
+    text-decoration: underline;
+    text-decoration-style: solid;
+  }
+`;
+
+const StyledBtnText = styled.div`
+  &:hover {
+    border-color: #d9b6ff;
+    color: #d9b6ff;
+    cursor: pointer;
+
+    &:active {
+      border-color: #ad61ff;
+      color: #ad61ff;
+      cursor: pointer;
+    }
+  }
+`;
+
+const StyledFilterButton = styled(StyledBtnText)`
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  border: 1px solid #ffffff;
+  border-radius: 60px;
+  padding: 6px 20px;
+
+  &:not(:last-child) {
+    margin-right: 10px;
+  }
+`;
 
 const listSingers = [
   "Michael Jackson",
@@ -10,14 +97,14 @@ const listSingers = [
   "Alla Pugacheva",
   "Agata Kristy",
 ];
+
 const listYears = ["1990", "2000", "2010"];
 
 const listGenre = ["Рок", "Хип-хоп", "Поп-музыка", "Техно", "Инди"];
+
 export function SearchByMenu() {
-  // Состояние для хранения выбранного фильтра
   const [activeFilter, setActiveFilter] = useState(null);
 
-  // Обработчик клика по фильтру
   const handleFilterClick = (item) => {
     if (item === activeFilter) {
       setActiveFilter(null);
@@ -25,66 +112,46 @@ export function SearchByMenu() {
       setActiveFilter(item);
     }
   };
+
   return (
-    <div className="centerblock__filter filter">
-      <div className="filter__title">Искать по:</div>
-      <div className="search-by-category">
-        {activeFilter === 1 ? (
-          <div className="search-by-items_list">
+    <StyledCenterblockFilter>
+      <StyledFilterTitle>Искать по:</StyledFilterTitle>
+      <StyledSearchByCategory>
+        {activeFilter === 1 && (
+          <StyledSearchByItemsList>
             {listSingers.map((singer, index) => (
-              <div key={index} className="search-by-item">
-                {singer}
-              </div>
+              <StyledSearchByItem key={index}>{singer}</StyledSearchByItem>
             ))}
-          </div>
-        ) : (
-          ""
+          </StyledSearchByItemsList>
         )}
-      </div>
-      <div
-        onClick={() => handleFilterClick(1)}
-        className="filter__button button-author _btn-text"
-      >
+      </StyledSearchByCategory>
+      <StyledFilterButton onClick={() => handleFilterClick(1)}>
         исполнителю
-      </div>
-      <div className="search-by-category">
-        {activeFilter === 2 ? (
-          <div className="search-by-items_list">
+      </StyledFilterButton>
+      <StyledSearchByCategory>
+        {activeFilter === 2 && (
+          <StyledSearchByItemsList>
             {listYears.map((year, index) => (
-              <div key={year} className="search-by-item">
-                {year}
-              </div>
+              <StyledSearchByItem key={year}>{year}</StyledSearchByItem>
             ))}
-          </div>
-        ) : (
-          ""
+          </StyledSearchByItemsList>
         )}
-      </div>
-      <div
-        onClick={() => handleFilterClick(2)}
-        className="filter__button button-year _btn-text"
-      >
+      </StyledSearchByCategory>
+      <StyledFilterButton onClick={() => handleFilterClick(2)}>
         году выпуска
-      </div>
-      <div className="search-by-category">
-        {activeFilter === 3 ? (
-          <div className="search-by-items_list">
+      </StyledFilterButton>
+      <StyledSearchByCategory>
+        {activeFilter === 3 && (
+          <StyledSearchByItemsList>
             {listGenre.map((genre, index) => (
-              <div key={index} className="search-by-item">
-                {genre}
-              </div>
+              <StyledSearchByItem key={index}>{genre}</StyledSearchByItem>
             ))}
-          </div>
-        ) : (
-          ""
+          </StyledSearchByItemsList>
         )}
-      </div>
-      <div
-        onClick={() => handleFilterClick(3)}
-        className="filter__button button-genre _btn-text"
-      >
+      </StyledSearchByCategory>
+      <StyledFilterButton onClick={() => handleFilterClick(3)}>
         жанру
-      </div>
-    </div>
+      </StyledFilterButton>
+    </StyledCenterblockFilter>
   );
 }
