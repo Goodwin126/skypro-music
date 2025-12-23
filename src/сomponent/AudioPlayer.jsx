@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 import { TrackPlay } from "./TrackPlay";
 import { SkelitonAudioPlay } from "./SkelitonAudioPlayer";
@@ -196,105 +196,142 @@ const StyledVolumeProgressLine = styled.input`
 `;
 
 export function AudioPlayer({ isLoading, indexTrackPlaying, tracks }) {
+  //состояние проигрывания
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoop, setLoop] = useState(false);
+  // состояние громкости
   const [volume, setVolume] = useState(0.7);
+  // состояние зациклености
+  const [isLoop, setLoop] = useState(null);
+  //  состояние загрузки
   const [currentTime, setCurrentTime] = useState(0);
+  //состояние путь к треку
   const [pathTrakc, setpathTrakc] = useState(null);
+  //состояние название трека
   const [trakcName, setTrakcName] = useState(null);
+  //состояние автор трека
   const [trackAuthor, setTrackAuthor] = useState(null);
+  //состояние автор трека
 
   const audioRef = useRef(null);
 
+  // Синхронизация loop с аудио
   useEffect(() => {
-    if (indexTrackPlaying !== null) {
-      setpathTrakc(`/music/${indexTrackPlaying + 1}.mp3`);
+    if (audioRef.current) {
+      audioRef.current.loop = isLoop;
     }
-  }, [indexTrackPlaying]);
+  }, [isLoop]);
 
+  useEffect(() => {
+    if (indexTrackPlaying === null) return;
+
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Обновляем путь к треку
+    const newPath = `/music/${indexTrackPlaying + 1}.mp3`;
+    setpathTrakc(newPath);
+
+    // Обновляем метаданные
+    setTrakcName(tracks[indexTrackPlaying].trackTitle);
+    setTrackAuthor(tracks[indexTrackPlaying].trackAuthor);
+
+    // Загружаем новый трек
+    audio.src = newPath;
+
+    // Обработчик для автоматического старта после загрузки
+    const handleCanPlay = async () => {
+      try {
+        await audio.play();
+        setIsPlaying(true);
+      } catch (err) {
+        console.error("Не удалось запустить воспроизведение:", err);
+        setIsPlaying(false);
+      }
+    };
+
+    // Обработчик ошибок
+    const handleError = () => {
+      console.error("Не удалось загрузить трек:", newPath);
+      setIsPlaying(false);
+    };
+
+    // Подключаем обработчики
+    audio.addEventListener("canplaythrough", handleCanPlay);
+    audio.addEventListener("error", handleError);
+
+    // Очистка обработчиков при смене трека или размонтировании
+    return () => {
+      audio.removeEventListener("canplaythrough", handleCanPlay);
+      audio.removeEventListener("error", handleError);
+    };
+  }, [indexTrackPlaying, tracks]);
+
+  // Управление воспроизведением
+  const handlePlay = useCallback(async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    try {
+      await audio.play();
+      setIsPlaying(true);
+    } catch (err) {
+      console.error("Ошибка воспроизведения:", err);
+      setIsPlaying(false);
+    }
+  }, []);
+
+  const handlePause = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      setIsPlaying(false);
+    }
+  }, []);
+
+  // Переключение между play/pause
+  const togglePlay = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (isLoading) return;
+      isPlaying ? handlePause() : handlePlay();
+    },
+    [isPlaying, isLoading, handlePlay, handlePause]
+  );
+
+  // Обработчик изменения времени
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleTimeUpdate = () => {
-      setCurrentTime(audio.currentTime);
-    };
-
+    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
     audio.addEventListener("timeupdate", handleTimeUpdate);
 
-    return () => {
-      audio.removeEventListener("timeupdate", handleTimeUpdate);
-    };
+    return () => audio.removeEventListener("timeupdate", handleTimeUpdate);
   }, []);
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio || !pathTrakc) return;
-
-    audio.load();
-
-    setTrakcName(tracks[indexTrackPlaying].trackTitle);
-    setTrackAuthor(tracks[indexTrackPlaying].trackAuthor);
-
-    if (isPlaying) {
-      audio.play().catch((error) => {
-        console.error("Ошибка автовоспроизведения:", error);
-      });
-    }
-
-    const handleError = () => {
-      console.error("Не удалось загрузить трек:", pathTrakc);
-    };
-    audio.addEventListener("error", handleError);
-
-    return () => audio.removeEventListener("error", handleError);
-  }, [pathTrakc, isPlaying, indexTrackPlaying, tracks]);
-
-  const handleStart = async () => {
-    try {
-      await audioRef.current.play();
-      setIsPlaying(true);
-    } catch (error) {
-      console.error("Ошибка воспроизведения:", error);
-    }
-  };
-
-  const handleStop = () => {
-    audioRef.current.pause();
-    setIsPlaying(false);
-  };
-
-  const togglePlay = (e) => {
-    e.preventDefault();
-    if (isLoading) return;
-    isPlaying ? handleStop() : handleStart();
-  };
-
-  const handleVolumeChange = (e) => {
+  // Обработка громкости
+  const handleVolumeChange = useCallback((e) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
     if (audioRef.current) {
       audioRef.current.volume = newVolume;
     }
-  };
+  }, []);
 
-  const handleLoop = () => {
+  // Обработка зацикливания
+  const handleLoop = useCallback(() => {
     setLoop((prev) => !prev);
+  }, []);
 
-    if (audioRef.current) {
-      audioRef.current.loop = !isLoop;
-    }
-  };
-
-  const handleNotWork = () => {
-    const message = "Эта функция пока не реализована.";
-    alert(message);
-  };
+  // Заглушка для нереализованных функций
+  const handleNotWork = useCallback(() => {
+    alert("Эта функция пока не реализована.");
+  }, []);
 
   return (
     <StyledBar>
       <audio ref={audioRef}>
-        {pathTrakc && <source src={pathTrakc} type="audio/mpeg" />}
+        <source src={pathTrakc} type="audio/mpeg" />
       </audio>
       <StyledBarContent>
         <ProgressBar audio={audioRef.current} currentTime={currentTime} />
@@ -308,11 +345,23 @@ export function AudioPlayer({ isLoading, indexTrackPlaying, tracks }) {
               </StyledPlayerBtnPrev>
               <StyledPlayerBtnPlay disabled={isLoading}>
                 <StyledPlayerBtnPlaySvg alt="play" onClick={togglePlay}>
-                  <use
-                    href={
-                      isPlaying ? "/img/icon/pause.svg" : "/img/icon/play.svg"
-                    }
-                  />
+                  {isPlaying ? (
+                    <svg
+                      width="15"
+                      height="19"
+                      viewBox="0 0 15 19"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <rect width="5" height="19" fill="#D9D9D9" />
+                      <rect x="10" width="5" height="19" fill="#D9D9D9" />
+                    </svg>
+                  ) : (
+                    <path
+                      d="M15 9.52628L-1.01012e-06 -4.47037e-06L-1.84293e-06 19.0526L15 9.52628Z"
+                      fill="#D9D9D9"
+                    />
+                  )}
                 </StyledPlayerBtnPlaySvg>
               </StyledPlayerBtnPlay>
               <StyledPlayerBtnNext>

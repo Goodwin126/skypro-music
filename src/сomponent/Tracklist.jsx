@@ -1,7 +1,7 @@
 import { PlaylistItem } from "./playlistItem";
 import { SkeletonItem } from "./SkeletonItem";
 import { SearchByMenu } from "./SearchByMenu";
-import styled from "styled-components";
+import { styled } from "styled-components";
 
 const StyledMainCenterblock = styled.div`
   width: auto;
@@ -108,7 +108,12 @@ const StyledContentPlaylist = styled.div`
   overflow-y: auto;
 `;
 
-export function TrackList({ isLoading, setIndexTrackPlaying, tracks }) {
+export function TrackList({
+  isLoading,
+  setIndexTrackPlaying,
+  indexTrackPlaying,
+  tracks,
+}) {
   return (
     <StyledMainCenterblock>
       <StyledCenterblockSearch>
@@ -146,8 +151,16 @@ export function TrackList({ isLoading, setIndexTrackPlaying, tracks }) {
                   trackAuthor={track.trackAuthor}
                   trackAlbum={track.trackAlbum}
                   trackTime={track.trackTime}
-                  sprite="/img/icon/sprite.svg"
-                  onClick={() => setIndexTrackPlaying(index)}
+                  sprite={
+                    index === indexTrackPlaying
+                      ? "current-track-play"
+                      : "/img/icon/sprite.svg#icon-note"
+                  }
+                  animate={index === indexTrackPlaying}
+                  onClick={() => {
+                    setIndexTrackPlaying(index);
+                  }}
+                  indexTrackPlaying={indexTrackPlaying}
                 />
               ))}
         </StyledContentPlaylist>

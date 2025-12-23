@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import { styled, keyframes, css } from "styled-components";
 
 export const StyledPlaylistItem = styled.div`
   width: 100%;
@@ -23,7 +23,6 @@ export const StyledTrackTitle = styled.div`
 export const StyledTrackTitleImage = styled.div`
   width: 51px;
   height: 51px;
-  padding: 16px;
   background: #313131;
   display: flex;
   align-items: center;
@@ -106,6 +105,33 @@ const StyledtrackTimeText = styled.span`
   color: #696969;
 `;
 
+const pulseAnimation = keyframes`
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+`;
+
+const StyledAnimatedSvg = styled.svg`
+  width: 12px;
+  height: 12px;
+  fill: transparent;
+
+  ${(props) =>
+    props.animate &&
+    css`
+      animation: ${pulseAnimation} 1.5s infinite;
+    `}
+`;
+
 export function PlaylistItem({
   index,
   trackTitle,
@@ -113,6 +139,7 @@ export function PlaylistItem({
   trackAlbum,
   trackTime,
   trackSpanContent,
+  animate,
   sprite,
   onClick,
 }) {
@@ -122,7 +149,26 @@ export function PlaylistItem({
         <StyledTrackTitle>
           <StyledTrackTitleImage>
             <StyledTrackTitleSvg alt="music">
-              <use href="/img/icon/sprite.svg#icon-note"></use>
+              <StyledAnimatedSvg animate={animate}>
+                {sprite === "current-track-play" ? (
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 16 16"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M0 8C0 3.58172 3.58172 0 8 0C12.4183 0 16 3.58172 16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8Z"
+                      fill="#B672FF"
+                    />
+                  </svg>
+                ) : (
+                  <svg>
+                    <use href={sprite} />
+                  </svg>
+                )}
+              </StyledAnimatedSvg>
             </StyledTrackTitleSvg>
           </StyledTrackTitleImage>
           <StyledTrackTitleText>

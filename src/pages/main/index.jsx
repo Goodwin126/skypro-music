@@ -26,7 +26,7 @@ export function Main({ onAuthButtonClick }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 5000);
+    }, 1000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -58,6 +58,7 @@ export function Main({ onAuthButtonClick }) {
         <TrackList
           isLoading={isLoading}
           setIndexTrackPlaying={setIndexTrackPlaying}
+          indexTrackPlaying={indexTrackPlaying}
           tracks={tracks}
         />
         <Sidebar isLoading={isLoading} onAuthButtonClick={onAuthButtonClick} />
