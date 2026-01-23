@@ -1,3 +1,5 @@
+import { useDispatch } from "react-redux";
+import { setTracks } from "../../store/trackSlice";
 import { Navmenu } from "../../сomponent/NavMenu";
 import { TrackList } from "../../сomponent/Tracklist";
 import { AudioPlayer } from "../../сomponent/AudioPlayer";
@@ -21,53 +23,25 @@ const StyledMain = styled.main`
 
 export function Main({ onAuthButtonClick }) {
   const [isLoading, setIsLoading] = useState(true);
-  const [indexTrackPlaying, setIndexTrackPlaying] = useState(null);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
+    dispatch(setTracks());
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
     return () => clearTimeout(timer);
-  }, []);
-
-  const tracks = [
-    {
-      trackTitle: "Guilt",
-      trackAuthor: "Nero",
-      trackAlbum: "Welcome Reality",
-      trackTime: "4:44",
-    },
-    {
-      trackTitle: "Electro",
-      trackAuthor: "Dynoro, Outwork, Mr. Gee",
-      trackAlbum: "Electro",
-      trackTime: "2:22",
-    },
-    {
-      trackTitle: "I’m Fire",
-      trackAuthor: "Ali Bakgor",
-      trackAlbum: "I’m Fire",
-      trackTime: "2:22",
-    },
-  ];
+  }, [dispatch]);
 
   return (
     <StyledContainer>
       <StyledMain>
         <Navmenu onAuthButtonClick={onAuthButtonClick} />
-        <TrackList
-          isLoading={isLoading}
-          setIndexTrackPlaying={setIndexTrackPlaying}
-          indexTrackPlaying={indexTrackPlaying}
-          tracks={tracks}
-        />
+        <TrackList isLoading={isLoading} />
         <Sidebar isLoading={isLoading} onAuthButtonClick={onAuthButtonClick} />
       </StyledMain>
-      <AudioPlayer
-        isLoading={isLoading}
-        indexTrackPlaying={indexTrackPlaying}
-        tracks={tracks}
-      />
+      <AudioPlayer isLoading={isLoading} />
       <footer className="footer"></footer>
     </StyledContainer>
   );

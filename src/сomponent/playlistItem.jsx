@@ -28,13 +28,17 @@ export const StyledTrackTitleImage = styled.div`
   align-items: center;
   justify-content: center;
   margin-right: 17px;
+  border-radius: 4px;
 `;
 
 export const StyledTrackTitleSvg = styled.svg`
+  display: block;
   width: 18px;
   height: 17px;
   fill: transparent;
   stroke: #4e4e4e;
+  margin: 0 auto;
+  overflow: visible;
 `;
 
 export const StyledTrackTitleText = styled.div`
@@ -109,10 +113,12 @@ const pulseAnimation = keyframes`
   0% {
     opacity: 1;
     transform: scale(1);
+    animation-timing-function: ease-in-out;
   }
   50% {
     opacity: 0.3;
-    transform: scale(1);
+    transform: scale(0.8);
+    animation-timing-function: ease-in-out;
   }
   100% {
     opacity: 1;
@@ -121,14 +127,19 @@ const pulseAnimation = keyframes`
 `;
 
 const StyledAnimatedSvg = styled.svg`
+  display: block;
   width: 12px;
   height: 12px;
   fill: transparent;
+  margin: 0 auto;
+  transform-origin: center center;
 
   ${(props) =>
-    props.animate &&
+    props.$animate &&
     css`
-      animation: ${pulseAnimation} 1.5s infinite;
+      animation: ${pulseAnimation} 0.7s infinite;
+      animation-play-state: ${props.$isPlaying ? "running" : "paused"};
+      will-change: transform, opacity;
     `}
 `;
 
@@ -140,6 +151,7 @@ export function PlaylistItem({
   trackTime,
   trackSpanContent,
   animate,
+  isPlaying,
   sprite,
   onClick,
 }) {
@@ -148,8 +160,8 @@ export function PlaylistItem({
       <StyledPlaylistTrack>
         <StyledTrackTitle>
           <StyledTrackTitleImage>
-            <StyledTrackTitleSvg alt="music">
-              <StyledAnimatedSvg animate={animate}>
+            <StyledTrackTitleSvg aria-label="Иконка трека">
+              <StyledAnimatedSvg $animate={animate} $isPlaying={isPlaying}>
                 {sprite === "current-track-play" ? (
                   <svg
                     width="16"

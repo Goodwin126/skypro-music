@@ -4,10 +4,10 @@ const CopyPlugin = require("copy-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
-const isProduction = process.env.NODE_ENV === "development";
+const isProduction = process.env.NODE_ENV === "production";
 
 module.exports = {
-  entry: "./src/js/index.ts",
+  entry: path.resolve(__dirname, "src/js/index.ts"),
   mode: isProduction ? "production" : "development",
   output: {
     path: path.resolve(__dirname, "dist"),
@@ -26,20 +26,13 @@ module.exports = {
         use: [MiniCssExtractPlugin.loader, "css-loader"],
       },
       {
-        test: /\.(png|svg|jpg|jpeg|gif)$/,
+        test: /\.(png|jpg|jpeg|gif|svg)$/,
         type: "asset/resource",
       },
       {
         test: /\.(woff|woff2|eot|ttf|otf)$/,
-        use: [
-          {
-            loader: "file-loader",
-            options: {
-              name: "[name].[ext]",
-              outputPath: "fonts/",
-            },
-          },
-        ],
+        type: "asset/resource",
+        generator: { filename: "fonts/[name].[ext]" },
       },
     ],
   },
@@ -48,19 +41,15 @@ module.exports = {
   },
   plugins: [
     new CopyPlugin({
-      patterns: [
-        { from: "./src/images", to: "static" },
-        { from: "./public/fonts", to: "fonts" },
-      ],
+      patterns: [{ from: "./src/images", to: "static" }],
     }),
-
     new HtmlWebpackPlugin({
       template: "./index.html",
     }),
     new MiniCssExtractPlugin(),
   ],
   optimization: {
-    minimizer: ["...", new CssMinimizerPlugin()],
+    minimizer: [new CssMinimizerPlugin()],
   },
-  devtool: isProduction ? false : "source-map",
+  devtool: isProduction ? "source-map" : "eval-source-map",
 };
