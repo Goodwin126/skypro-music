@@ -1,4 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  mixTrack,
+  turnTrackTrackPlaying,
+  setIsPlaying,
+} from "../store/trackSlice";
 
 import { TrackPlay } from "./TrackPlay";
 import { SkelitonAudioPlay } from "./SkelitonAudioPlayer";
@@ -195,9 +201,13 @@ const StyledVolumeProgressLine = styled.input`
   width: 109px;
 `;
 
-export function AudioPlayer({ isLoading, indexTrackPlaying, tracks }) {
+export function AudioPlayer({ isLoading }) {
   //состояние проигрывания
-  const [isPlaying, setIsPlaying] = useState(false);
+  const isPlaying = useSelector((state) => state.track.isPlaying);
+
+  //состояние микса треков
+  const [isMixing, setIsMixing] = useState(false);
+
   // состояние громкости
   const [volume, setVolume] = useState(0.7);
   // состояние зациклености
@@ -212,6 +222,12 @@ export function AudioPlayer({ isLoading, indexTrackPlaying, tracks }) {
   const [trackAuthor, setTrackAuthor] = useState(null);
   //состояние автор трека
 
+  const dispatch = useDispatch();
+
+  const tracks = useSelector((state) => state.track.tracks);
+
+  const nameTrackPlaying = useSelector((state) => state.track.trackPlaying);
+
   const audioRef = useRef(null);
 
   // Синхронизация loop с аудио
@@ -222,37 +238,47 @@ export function AudioPlayer({ isLoading, indexTrackPlaying, tracks }) {
   }, [isLoop]);
 
   useEffect(() => {
-    if (indexTrackPlaying === null) return;
+    if (nameTrackPlaying === null) return;
+
+    const currentTrack = tracks.find(
+      (track) => track.trackName === nameTrackPlaying,
+    );
 
     const audio = audioRef.current;
     if (!audio) return;
 
     // Обновляем путь к треку
-    const newPath = `/music/${indexTrackPlaying + 1}.mp3`;
+    const newPath = `/music/${nameTrackPlaying}.mp3`;
     setpathTrakc(newPath);
 
     // Обновляем метаданные
-    setTrakcName(tracks[indexTrackPlaying].trackTitle);
-    setTrackAuthor(tracks[indexTrackPlaying].trackAuthor);
+    setTrakcName(currentTrack.trackTitle);
+    setTrackAuthor(currentTrack.trackAuthor);
 
     // Загружаем новый трек
     audio.src = newPath;
+
+    const handleEnded = () => {
+      dispatch(turnTrackTrackPlaying({ next: true })); // Переходим к следующему треку
+    };
+
+    audio.addEventListener("ended", handleEnded);
 
     // Обработчик для автоматического старта после загрузки
     const handleCanPlay = async () => {
       try {
         await audio.play();
-        setIsPlaying(true);
+        dispatch(setIsPlaying(true));
       } catch (err) {
         console.error("Не удалось запустить воспроизведение:", err);
-        setIsPlaying(false);
+        dispatch(setIsPlaying(false));
       }
     };
 
     // Обработчик ошибок
     const handleError = () => {
       console.error("Не удалось загрузить трек:", newPath);
-      setIsPlaying(false);
+      dispatch(setIsPlaying(false));
     };
 
     // Подключаем обработчики
@@ -261,10 +287,11 @@ export function AudioPlayer({ isLoading, indexTrackPlaying, tracks }) {
 
     // Очистка обработчиков при смене трека или размонтировании
     return () => {
+      audio.removeEventListener("ended", handleEnded);
       audio.removeEventListener("canplaythrough", handleCanPlay);
       audio.removeEventListener("error", handleError);
     };
-  }, [indexTrackPlaying, tracks]);
+  }, [nameTrackPlaying, tracks, dispatch]);
 
   // Управление воспроизведением
   const handlePlay = useCallback(async () => {
@@ -273,20 +300,20 @@ export function AudioPlayer({ isLoading, indexTrackPlaying, tracks }) {
 
     try {
       await audio.play();
-      setIsPlaying(true);
+      dispatch(setIsPlaying(true));
     } catch (err) {
       console.error("Ошибка воспроизведения:", err);
-      setIsPlaying(false);
+      dispatch(setIsPlaying(false));
     }
-  }, []);
+  }, [dispatch]);
 
   const handlePause = useCallback(() => {
     const audio = audioRef.current;
     if (audio) {
       audio.pause();
-      setIsPlaying(false);
+      dispatch(setIsPlaying(false));
     }
-  }, []);
+  }, [dispatch]);
 
   // Переключение между play/pause
   const togglePlay = useCallback(
@@ -295,7 +322,7 @@ export function AudioPlayer({ isLoading, indexTrackPlaying, tracks }) {
       if (isLoading) return;
       isPlaying ? handlePause() : handlePlay();
     },
-    [isPlaying, isLoading, handlePlay, handlePause]
+    [isPlaying, isLoading, handlePlay, handlePause],
   );
 
   // Обработчик изменения времени
@@ -339,7 +366,12 @@ export function AudioPlayer({ isLoading, indexTrackPlaying, tracks }) {
           <StyledBarBarPlayer>
             <StyledPlayerControls>
               <StyledPlayerBtnPrev>
-                <StyledPlayerBtnPrevSvg alt="prev" onClick={handleNotWork}>
+                <StyledPlayerBtnPrevSvg
+                  alt="prev"
+                  onClick={() => {
+                    dispatch(turnTrackTrackPlaying({ next: false }));
+                  }}
+                >
                   <use href="/img/icon/sprite.svg#icon-prev" />
                 </StyledPlayerBtnPrevSvg>
               </StyledPlayerBtnPrev>
@@ -365,7 +397,12 @@ export function AudioPlayer({ isLoading, indexTrackPlaying, tracks }) {
                 </StyledPlayerBtnPlaySvg>
               </StyledPlayerBtnPlay>
               <StyledPlayerBtnNext>
-                <StyledPlayerBtnNextSvg alt="next" onClick={handleNotWork}>
+                <StyledPlayerBtnNextSvg
+                  alt="next"
+                  onClick={() => {
+                    dispatch(turnTrackTrackPlaying({ next: true }));
+                  }}
+                >
                   <use href="/img/icon/sprite.svg#icon-next" />
                 </StyledPlayerBtnNextSvg>
               </StyledPlayerBtnNext>
@@ -383,9 +420,15 @@ export function AudioPlayer({ isLoading, indexTrackPlaying, tracks }) {
               <StyledPlayerBtnShuffle>
                 <StyledplayerBtnShuffleSvg
                   alt="shuffle"
-                  onClick={handleNotWork}
+                  onClick={() => {
+                    setIsMixing(!isMixing);
+                    dispatch(mixTrack({ isMixing }));
+                  }}
                 >
-                  <use href="/img/icon/sprite.svg#icon-shuffle" />
+                  <use
+                    href="/img/icon/sprite.svg#icon-shuffle"
+                    stroke={isMixing ? "white" : "grey"}
+                  />
                 </StyledplayerBtnShuffleSvg>
               </StyledPlayerBtnShuffle>
             </StyledPlayerControls>

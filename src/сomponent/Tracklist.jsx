@@ -1,3 +1,5 @@
+import { useSelector, useDispatch } from "react-redux";
+import { setTrackPlaying, setIsPlaying } from "../store/trackSlice";
 import { PlaylistItem } from "./playlistItem";
 import { SkeletonItem } from "./SkeletonItem";
 import { SearchByMenu } from "./SearchByMenu";
@@ -108,12 +110,17 @@ const StyledContentPlaylist = styled.div`
   overflow-y: auto;
 `;
 
-export function TrackList({
-  isLoading,
-  setIndexTrackPlaying,
-  indexTrackPlaying,
-  tracks,
-}) {
+export function TrackList({ isLoading }) {
+  const tracks = useSelector((state) => state.track.tracks);
+  const nameTrackPlaying = useSelector((state) => state.track.trackPlaying);
+  const isPlaying = useSelector((state) => state.track.isPlaying);
+  const dispatch = useDispatch();
+
+  const handleTrackClick = (trackName) => {
+    dispatch(setTrackPlaying({ trackName }));
+    dispatch(setIsPlaying(true));
+  };
+
   return (
     <StyledMainCenterblock>
       <StyledCenterblockSearch>
@@ -145,22 +152,20 @@ export function TrackList({
             : tracks.map((track, index) => (
                 <PlaylistItem
                   key={index}
-                  index={index}
+                  trackName={track.trackName}
                   trackTitle={track.trackTitle}
                   trackSpanContent={track.trackSpanContent}
                   trackAuthor={track.trackAuthor}
                   trackAlbum={track.trackAlbum}
                   trackTime={track.trackTime}
                   sprite={
-                    index === indexTrackPlaying
+                    track.trackName === nameTrackPlaying
                       ? "current-track-play"
                       : "/img/icon/sprite.svg#icon-note"
                   }
-                  animate={index === indexTrackPlaying}
-                  onClick={() => {
-                    setIndexTrackPlaying(index);
-                  }}
-                  indexTrackPlaying={indexTrackPlaying}
+                  animate={track.trackName === nameTrackPlaying}
+                  isPlaying={isPlaying} // передаём флаг
+                  onClick={() => handleTrackClick(track.trackName)}
                 />
               ))}
         </StyledContentPlaylist>
