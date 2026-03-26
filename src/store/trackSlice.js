@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 const shuffleArray = (array) => {
   const newArray = [...array];
@@ -9,113 +9,166 @@ const shuffleArray = (array) => {
   return newArray;
 };
 
+//действие для регистрации пользователя
+export const registrationUser = createAsyncThunk(
+  "user/registration",
+  async (registrationData, { rejectWithValue }) => {
+    try {
+      const response = await fetch(
+        "https://skypro-music-api.skyeng.tech/user/signup/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(registrationData),
+        },
+      );
+
+      // Проверяем статус ответа
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+
+        // Для 400 возвращаем ошибки валидации
+        if (response.status === 400) {
+          return rejectWithValue(errorData);
+        }
+
+        // Для других ошибок — общее сообщение
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Успешный ответ (201)
+      const userData = await response.json();
+      return userData;
+    } catch (error) {
+      // Обработка сетевых ошибок и других исключений
+      return rejectWithValue({
+        error: error.message || "Произошла ошибка при регистрации",
+      });
+    }
+  },
+);
+
+// Асинхронное действие для загрузки треков
+export const loadTracks = createAsyncThunk(
+  "tracks/loadTracks",
+  async (_, { dispatch }) => {
+    try {
+      // Формируем полный URL: базовый URL + endpoint
+      const response = await fetch("http://localhost:3001/tracks");
+
+      // Проверяем статус ответа HTTP (200–299 — успех)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Парсим JSON из тела ответа
+      const data = await response.json();
+
+      return data; // Возвращаем данные для fulfilled-состояния
+    } catch (error) {
+      // Пробрасываем ошибку для rejected-состояния
+      throw error;
+    }
+  },
+);
+
 const tracksSlice = createSlice({
-  name: "tracks",
+  name: "storage",
   initialState: {
-    tracks: [], // исходный лист для рендеринга
-    tracksListPlaying: [], // лист проигрывания
-    trackPlaying: null,
-    isPlaying: false,
+    user: null,
+    userError: null,
+    tracks: [],
+    track: {
+      trackPlaying: null,
+      isMixing: false,
+    },
+    isLoading: false,
+    error: null,
   },
   reducers: {
     setTracks(state, action) {
-      // Если payload передан — используем его, иначе берём дефолтный список
-      const tracksList = action.payload || [
-        {
-          trackName: "Luke-Bergs-Bliss(chosic.com)",
-          trackTitle: "Hyperreal",
-          trackAuthor: "Flume",
-          trackAlbum: "Skin",
-          trackTime: "4:12",
-        },
-        {
-          trackName: "alexander-nakarada-superepic(chosic.com)",
-          trackTitle: "A Moment Apart",
-          trackAuthor: "Odesza",
-          trackAlbum: "A Moment Apart",
-          trackTime: "5:03",
-        },
-        {
-          trackName:
-            "fm-freemusic-inspiring-optimistic-upbeat-energetic-guitar-rhythm(chosic.com)",
-          trackTitle: "Kerala",
-          trackAuthor: "Bonobo",
-          trackAlbum: "Migration",
-          trackTime: "4:47",
-        },
-        {
-          trackName: "HEROICCC(chosic.com)",
-          trackTitle: "Awake",
-          trackAuthor: "Tycho",
-          trackAlbum: "Awake",
-          trackTime: "3:58",
-        },
-        {
-          trackName: "Luke-Bergs-Take-It-Easy(chosic.com)",
-          trackTitle: "Heat Waves",
-          trackAuthor: "Glass Animals",
-          trackAlbum: "Dreamland",
-          trackTime: "3:54",
-        },
-        {
-          trackName: "roa-music-summer-madness(chosic.com)",
-          trackTitle: "Underwater",
-          trackAuthor: "RÜFÜS DU SOL",
-          trackAlbum: "Surrender",
-          trackTime: "4:29",
-        },
-      ];
-
+      const tracksList = action.payload;
       state.tracks = tracksList;
-      state.tracksListPlaying = tracksList;
     },
-
     mixTrack(state, action) {
-      if (action.payload.isMixing === false) {
-        state.tracksListPlaying = shuffleArray(state.tracks);
+      if (action.payload.isMixing === true) {
+        state.tracks = shuffleArray(state.tracks);
       } else {
-        state.tracksListPlaying = state.tracks;
+        return;
       }
     },
-
     setTrackPlaying(state, action) {
       if (action.payload?.trackName) {
-        state.trackPlaying = action.payload.trackName;
+        state.track.trackPlaying = action.payload.trackName;
       }
     },
-
     turnTrackTrackPlaying(state, action) {
-      if (state.trackPlaying === null) return;
+      if (state.track.trackPlaying === null) return;
 
-      const currentIndex = state.tracksListPlaying.findIndex(
-        (track) => track.trackName === state.trackPlaying,
+      const currentIndex = state.tracks.findIndex(
+        (track) => track.trackName === state.track.trackPlaying,
       );
 
       if (currentIndex === -1) return;
 
       if (action.payload.next) {
-        // Если есть следующий трек — переключаемся
-        if (currentIndex < state.tracksListPlaying.length - 1) {
-          state.trackPlaying =
-            state.tracksListPlaying[currentIndex + 1].trackName;
+        if (currentIndex < state.tracks.length - 1) {
+          state.track.trackPlaying = state.tracks[currentIndex + 1].trackName;
         }
-        // Если это последний трек — можно:
-        // - остановить плеер: state.trackPlaying = null;
-        // - зациклить плейлист: state.trackPlaying = state.tracksListPlaying[0].trackName;
       } else {
-        // Логика для "предыдущего трека" (как раньше)
         if (currentIndex > 0) {
-          state.trackPlaying =
-            state.tracksListPlaying[currentIndex - 1].trackName;
+          state.track.trackPlaying = state.tracks[currentIndex - 1].trackName;
         }
       }
     },
     setIsPlaying(state, action) {
-      state.isPlaying = action.payload;
+      state.track.isPlaying = action.payload;
     },
     togglePlay(state) {
-      state.isPlaying = !state.isPlaying;
+      state.track.isPlaying = !state.isPlaying;
     },
+
+    setCurrentTime(state, action) {
+      state.track.currentTime = action.payload;
+    },
+
+    setVolume(state, action) {
+      state.track.volume = action.payload;
+    },
+
+    setLoop(state, action) {
+      state.track.isLoop = action.payload;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(loadTracks.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(loadTracks.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.tracks = action.payload;
+      })
+      .addCase(loadTracks.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message;
+      })
+      .addCase(registrationUser.pending, (state) => {
+        state.isLoading = true;
+        state.userError = null;
+      })
+      .addCase(registrationUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload; // сохраняем данные пользователя
+        state.userError = null;
+      })
+      .addCase(registrationUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.userError = action.payload; // сохраняем ошибки валидации
+      });
   },
 });
 
@@ -126,5 +179,9 @@ export const {
   turnTrackTrackPlaying,
   setIsPlaying,
   togglePlay,
+  setCurrentTime,
+  setVolume,
+  setLoop,
 } = tracksSlice.actions;
+
 export default tracksSlice.reducer;

@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styled, { createGlobalStyle } from "styled-components";
 import { AppRoutes } from "./routes";
+import AudioPlayer from "./components/AudioPlayer";
+import { useDispatch } from "react-redux";
+
+import { loadTracks } from "./store/trackSlice";
 
 const GlobalStyle = createGlobalStyle`
   /* Сброс базовых стилей */
@@ -59,6 +63,12 @@ const StyledWrapper = styled.div`
 `;
 
 function App() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(loadTracks());
+  }, [dispatch]);
+
   const [user, setUser] = useState(() => {
     return localStorage.getItem("user");
   });
@@ -83,6 +93,7 @@ function App() {
             onAuthButtonClick={user ? handleLogout : handleLogin}
           />
         </StyledWrapper>
+        <AudioPlayer />
       </div>
     </>
   );

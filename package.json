@@ -57,6 +57,8 @@
   },
   "scripts": {
     "start": "node scripts/start.js",
+    "dev": "concurrently \"npm run server\" \"npm run start \"",
+    "server": "json-server -w server/db.json -p 3001",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js"
   },
@@ -139,8 +141,10 @@
     "@babel/preset-env": "^7.28.3",
     "@babel/preset-react": "^7.27.1",
     "babel-loader": "^10.0.0",
+    "concurrently": "^6.2.1",
     "css-loader": "^7.1.2",
     "file-loader": "^6.2.0",
+    "json-server": "^0.16.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "style-loader": "^4.0.0"
