@@ -6,18 +6,45 @@ import SkeletonItem from "../SkeletonItem";
 import SearchByMenu from "../SearchByMenu";
 
 import { useSelector, useDispatch } from "react-redux";
-import { setTrackPlaying, setIsPlaying } from "../../store/trackSlice";
+import {
+  setTrackPlaying,
+  setIsPlaying,
+  setTrackLike,
+  setIsMyTracks,
+} from "../../store/trackSlice";
 
 export default function TrackList() {
   const dispatch = useDispatch();
 
-  const { tracks, isLoading, trackPlaying, isPlaying } = useSelector(
+  const { tracks, isLoading, isMyTracks } = useSelector(
     (state) => state.storage,
   );
 
+  const { trackPlaying, isPlaying } = useSelector(
+    (state) => state.storage.track,
+  );
+
   const handleTrackClick = (trackName) => {
-    dispatch(setTrackPlaying({ trackName }));
-    dispatch(setIsPlaying(true));
+    hadleStateMyTrakcs();
+    if (trackPlaying === trackName) {
+      if (isPlaying) {
+        dispatch(setIsPlaying(false));
+      } else {
+        dispatch(setIsPlaying(true));
+      }
+    } else {
+      dispatch(setTrackPlaying({ trackName }));
+      dispatch(setIsPlaying(true));
+    }
+  };
+  const hadleStateMyTrakcs = () => {
+    if (isMyTracks) {
+      dispatch(setIsMyTracks(false));
+    }
+  };
+
+  const handleClickLike = (trackName) => {
+    dispatch(setTrackLike({ trackName }));
   };
 
   return (
@@ -65,7 +92,8 @@ export default function TrackList() {
                   trackLike={track.trackLike}
                   animate={track.trackName === trackPlaying}
                   isPlaying={isPlaying}
-                  onClick={() => handleTrackClick(track.trackName)}
+                  onClickPlay={() => handleTrackClick(track.trackName)}
+                  onClickLike={() => handleClickLike(track.trackName)}
                 />
               ))}
         </S.StyledContentPlaylist>

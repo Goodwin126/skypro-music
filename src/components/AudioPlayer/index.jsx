@@ -1,9 +1,9 @@
 import * as S from "./styles";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   mixTrack,
-  turnTrackTrackPlaying,
+  turnTrackPlaying,
   setIsPlaying,
 } from "../../store/trackSlice";
 
@@ -19,7 +19,7 @@ export default function AudioPlayer() {
   const isPlaying = useSelector((state) => state.storage.track.isPlaying);
 
   //состояние путь к треку
-  const [PathTrack, setPathTrack] = useState(null);
+  const [pathTrack, setPathTrack] = useState(null);
 
   //состояние микса треков
   const [isMixing, setIsMixing] = useState(false);
@@ -28,16 +28,18 @@ export default function AudioPlayer() {
   const [volume, setVolume] = useState(0.7);
 
   // состояние зациклености
-  const [isLoop, setLoop] = useState(null);
+  const [isLoop, setLoop] = useState(false);
 
   //  состояние загрузки
   const [currentTime, setCurrentTime] = useState(0);
 
-  // //состояние название трека
-  const [trackName, setTrackName] = useState(null);
-  // //состояние автор трека
-  const [trackAuthor, setTrackAuthor] = useState(null);
-  //состояние автор трека
+  // состояние названия трека
+  const [trackName, setTrackName] = useState("Неизвестный трек"); // инициализируем значением по умолчанию
+  // состояние автора трека
+  const [trackAuthor, setTrackAuthor] = useState("Неизвестный автор"); // инициализируем значением по умолчанию
+
+  // Сохраняем currentTrack в состоянии
+  const [currentTrack, setCurrentTrack] = useState(null);
 
   const dispatch = useDispatch();
 
@@ -47,69 +49,70 @@ export default function AudioPlayer() {
     (state) => state.storage.track.trackPlaying,
   );
 
-  useEffect(() => {
-    if (isLoading || tracks.length === 0) return;
-
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (nameTrackPlaying === null) return;
-
-    const currentTrack = tracks.find(
+  // обновляем currentTrack при смене nameTrackPlaying
+  useMemo(() => {
+    if (tracks.length === 0) return;
+    const foundTrack = tracks.find(
       (track) => track.trackName === nameTrackPlaying,
     );
+    setCurrentTrack(foundTrack);
+  }, [tracks, nameTrackPlaying]);
 
-    // Обновляем путь к треку
+  // логика загрузки и настройки трека
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !nameTrackPlaying) return;
+
+    // обновляем путь к треку
     const newPath = `/music/${nameTrackPlaying}.mp3`;
     setPathTrack(newPath);
 
-    // Обновляем метаданные
-    setTrackName(currentTrack.trackTitle ?? "Неизвестный трек");
-    setTrackAuthor(currentTrack.trackAuthor ?? "Неизвестный автор");
-
-    // Загружаем новый трек
+    // загружаем новый трек
     audio.src = newPath;
 
     const handleEnded = () => {
-      dispatch(turnTrackTrackPlaying({ next: true })); // Переходим к следующему треку
+      dispatch(turnTrackPlaying({ next: true })); // переходим к следующему треку
     };
-
-    audio.addEventListener("ended", handleEnded);
-
-    // Обработчик для автоматического старта после загрузки
     const handleCanPlay = async () => {
-      try {
-        await audio.play();
-        dispatch(setIsPlaying(true));
-      } catch (err) {
-        console.error("Не удалось запустить воспроизведение:", err);
-        dispatch(setIsPlaying(false));
+      if (isPlaying) {
+        try {
+          await audio.play();
+        } catch (err) {
+          console.error("Не удалось запустить воспроизведение:", err);
+          dispatch(setIsPlaying(false));
+        }
       }
     };
 
-    // Обработчик ошибок
     const handleError = () => {
       console.error("Не удалось загрузить трек:", newPath);
       dispatch(setIsPlaying(false));
     };
 
-    // Подключаем обработчики
+    // подключаем обработчики
+    audio.addEventListener("ended", handleEnded);
     audio.addEventListener("canplaythrough", handleCanPlay);
     audio.addEventListener("error", handleError);
 
-    // Очистка обработчиков при смене трека или размонтировании
+    // очистка обработчиков при смене трека или размонтировании
     return () => {
       audio.removeEventListener("ended", handleEnded);
       audio.removeEventListener("canplaythrough", handleCanPlay);
       audio.removeEventListener("error", handleError);
     };
-  }, [isLoading, tracks, nameTrackPlaying, dispatch]);
+  }, [nameTrackPlaying, isPlaying, dispatch]);
 
-  // Управление воспроизведением
+  // обновление метаданных — зависит от currentTrack
+  useEffect(() => {
+    if (!currentTrack) return;
+    // обновляем метаданные только при наличии трека
+    setTrackName(currentTrack.trackTitle ?? "Неизвестный трек");
+    setTrackAuthor(currentTrack.trackAuthor ?? "Неизвестный автор");
+  }, [currentTrack]);
+  // независимое управление воспроизведением
   const handlePlay = useCallback(async () => {
     const audio = audioRef.current;
-    if (!audio) return;
-
+    if (!audio || !pathTrack) return; // проверяем наличие трека
     try {
       await audio.play();
       dispatch(setIsPlaying(true));
@@ -117,26 +120,20 @@ export default function AudioPlayer() {
       console.error("Ошибка воспроизведения:", err);
       dispatch(setIsPlaying(false));
     }
-  }, [dispatch]);
+  }, [pathTrack, dispatch]);
 
   const handlePause = useCallback(() => {
     const audio = audioRef.current;
+    if (!audio) return;
 
-    if (audio) {
-      audio.pause();
-      dispatch(setIsPlaying(false));
-    }
+    audio.pause();
+    dispatch(setIsPlaying(false));
   }, [dispatch]);
 
-  // Переключение между play/pause
-  const togglePlay = useCallback(
-    (e) => {
-      e.preventDefault();
-      if (isLoading) return;
-      isPlaying ? handlePause() : handlePlay();
-    },
-    [isPlaying, isLoading, handlePlay, handlePause],
-  );
+  // переключение между play/pause
+  const togglePlay = useCallback(() => {
+    isPlaying ? handlePause() : handlePlay();
+  }, [isPlaying, handlePlay, handlePause]);
 
   // Обработчик изменения времени
   useEffect(() => {
@@ -178,7 +175,7 @@ export default function AudioPlayer() {
   return (
     <S.StyledBar>
       <audio ref={audioRef}>
-        <source src={PathTrack} type="audio/mpeg" />
+        <source src={pathTrack} type="audio/mpeg" />
       </audio>
       <S.StyledBarContent>
         <ProgressBar audio={audioRef.current} currentTime={currentTime} />
@@ -189,7 +186,7 @@ export default function AudioPlayer() {
                 <S.StyledPlayerBtnPrevSvg
                   alt="prev"
                   onClick={() => {
-                    dispatch(turnTrackTrackPlaying({ next: false }));
+                    dispatch(turnTrackPlaying({ next: false }));
                   }}
                 >
                   <use href="/img/icon/sprite.svg#icon-prev" />
@@ -220,7 +217,7 @@ export default function AudioPlayer() {
                 <S.StyledPlayerBtnNextSvg
                   alt="next"
                   onClick={() => {
-                    dispatch(turnTrackTrackPlaying({ next: true }));
+                    dispatch(turnTrackPlaying({ next: true }));
                   }}
                 >
                   <use href="/img/icon/sprite.svg#icon-next" />
@@ -241,8 +238,8 @@ export default function AudioPlayer() {
                 <S.StyledplayerBtnShuffleSvg
                   alt="shuffle"
                   onClick={() => {
-                    setIsMixing(!isMixing);
                     dispatch(mixTrack({ isMixing }));
+                    setIsMixing(!isMixing);
                   }}
                 >
                   <use

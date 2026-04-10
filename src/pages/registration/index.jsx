@@ -1,12 +1,13 @@
 import * as S from "./styles";
-import { Link } from "react-router-dom";
-import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { registrationUser } from "../../store/trackSlice";
+import { Link, useNavigate } from "react-router-dom";
+import { useSendingSigningUpDataMutation } from "../../services/enter";
+import { useState, useCallback } from "react";
 
 export const Registration = () => {
-  const dispatch = useDispatch();
-  const { isLoading } = useSelector((state) => state.storage);
+  const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
+  const [sandingDate, { isLoading, isError, error }] =
+    useSendingSigningUpDataMutation();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -14,11 +15,49 @@ export const Registration = () => {
     username: "",
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log(formData);
-    await dispatch(registrationUser(formData));
-  };
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+
+      const newErrors = {};
+
+      // Валидация полей
+      if (!formData.email) {
+        newErrors.email = "Email обязателен для заполнения";
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = "Введите корректный email";
+      }
+
+      if (!formData.password) {
+        newErrors.password = "Пароль обязателен для заполнения";
+      } else if (formData.password.length < 6) {
+        newErrors.password = "Пароль должен содержать минимум 6 символов";
+      }
+
+      if (!formData.username) {
+        newErrors.username = "Логин обязателен для заполнения";
+      } else if (formData.username.length < 3) {
+        newErrors.username = "Логин должен содержать минимум 3 символа";
+      }
+
+      // Если есть ошибки — сохраняем их и выходим
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        return;
+      }
+
+      // Очищаем ошибки, если всё ок
+      setErrors({});
+
+      try {
+        await sandingDate(formData).unwrap();
+        navigate("/login");
+      } catch (err) {
+        console.error("Registration failed:", err);
+      }
+    },
+    [sandingDate, navigate, formData],
+  );
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,6 +77,7 @@ export const Registration = () => {
                 <S.StyledModalLogoImg src="../img/logo_modal.png" alt="logo" />
               </S.StyledModalLogo>
             </Link>
+
             <S.StyledModalInput
               type="email"
               name="email"
@@ -46,6 +86,7 @@ export const Registration = () => {
               onChange={handleChange}
               required
             />
+            {errors.email && <S.StyledError>{errors.email}</S.StyledError>}
             <S.StyledModalInput
               type="text"
               name="username"
@@ -54,6 +95,9 @@ export const Registration = () => {
               onChange={handleChange}
               required
             />
+            {errors.username && (
+              <S.StyledError>{errors.username}</S.StyledError>
+            )}
             <S.StyledModalInput
               type="password"
               name="password"
@@ -62,12 +106,20 @@ export const Registration = () => {
               onChange={handleChange}
               required
             />
+            {errors.password && (
+              <S.StyledError>{errors.password}</S.StyledError>
+            )}
+            {isError && (
+              <S.StyledError>
+                Ошибка входа: {error?.data?.message || "Неверные данные"}
+              </S.StyledError>
+            )}
             <S.StyledModalBtnSignupEnt
               type="submit"
               disabled={isLoading}
               onClick={handleSubmit}
             >
-              {isLoading ? "Регистрация..." : "Зарегистрироваться"}
+              Зарегистрироваться
             </S.StyledModalBtnSignupEnt>
           </S.StyledModalFormLogin>
         </S.StyledModalBlock>

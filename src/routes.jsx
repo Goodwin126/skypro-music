@@ -29,7 +29,7 @@ export const AppRoutes = ({ user, onAuthButtonClick }) => {
         path="/my-playlist"
         element={
           <ProtectedRoute isAllowed={Boolean(user)}>
-            <MyPlaylist />
+            <MyPlaylist onAuthButtonClick={onAuthButtonClick} />
           </ProtectedRoute>
         }
       ></Route>

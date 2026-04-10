@@ -14,7 +14,7 @@
       "trackAuthor": "Odesza",
       "trackAlbum": "A Moment Apart",
       "trackTime": "5:03",
-      "trackLike": true
+      "trackLike": false
     },
     {
       "trackName": "fm-freemusic-inspiring-optimistic-upbeat-energetic-guitar-rhythm(chosic.com)",
@@ -48,5 +48,18 @@
       "trackTime": "4:29",
       "trackLike": false
     }
-  ]
+  ],
+  "signup": {
+    "email": "vasiliy@gmail.com",
+    "password": "asdhgjkflkg12312",
+    "username": "asd"
+  },
+  "login": {
+    "email": "vasiliy@gmail.com",
+    "password": "asd"
+  },
+  "tokens": {
+    "access": "mock-access-token-123",
+    "refresh": "mock-refresh-token-456"
+  }
 }

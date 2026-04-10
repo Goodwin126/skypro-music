@@ -3,8 +3,11 @@ import styled, { createGlobalStyle } from "styled-components";
 import { AppRoutes } from "./routes";
 import AudioPlayer from "./components/AudioPlayer";
 import { useDispatch } from "react-redux";
+import { useLocation } from "react-router-dom";
 
 import { loadTracks } from "./store/trackSlice";
+
+import { useRefreshTokenDataMutation } from "./services/enter";
 
 const GlobalStyle = createGlobalStyle`
   /* Сброс базовых стилей */
@@ -63,25 +66,125 @@ const StyledWrapper = styled.div`
 `;
 
 function App() {
+  const location = useLocation();
   const dispatch = useDispatch();
+
+  const [refreshTokenData, { isLoading, Error }] =
+    useRefreshTokenDataMutation();
 
   useEffect(() => {
     dispatch(loadTracks());
   }, [dispatch]);
 
+  // Инициализация состояния с парсингом JSON
   const [user, setUser] = useState(() => {
-    return localStorage.getItem("user");
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      try {
+        return JSON.parse(savedUser);
+      } catch (e) {
+        console.error("Ошибка парсинга user из localStorage:", e);
+        return null;
+      }
+    }
+    return null;
   });
 
-  const handleLogin = () => {
-    localStorage.setItem("user", "tadam");
-    setUser("tadam");
+  // ID интервала для обновления токена
+  const [refreshIntervalId, setRefreshIntervalId] = useState(null);
+
+  const handleRefreshToken = async () => {
+    // Проверяем, есть ли данные в localStorage
+    const dataString = localStorage.getItem("user");
+    if (!dataString) {
+      console.log("Данные не найдены в localStorage");
+      return;
+    }
+
+    try {
+      const data = JSON.parse(dataString);
+      const { refresh } = data;
+
+      // Вызываем мутацию для обновления токена
+      const result = await refreshTokenData({ refresh }).unwrap();
+
+      if (result && result.access) {
+        // Если API вернуло новый refresh-токен, используем его
+        const newRefresh = result.refresh || refresh;
+
+        // Создаём новый объект с обновлёнными токенами
+        const updatedUserData = {
+          access: result.access,
+          refresh: newRefresh,
+        };
+
+        // Сохраняем обновлённые данные в localStorage
+        localStorage.setItem("user", JSON.stringify(updatedUserData));
+
+        // Обновляем состояние компонента
+        setUser(updatedUserData);
+
+        console.log("Токен успешно обновлён:", result);
+        console.log("access = ", result.access);
+        console.log("refresh = ", newRefresh);
+      } else {
+        throw new Error("Ответ сервера не содержит access-токен");
+      }
+    } catch (error) {
+      console.error("Ошибка обновления токена:", error);
+      // При ошибке останавливаем интервал
+      if (refreshIntervalId) {
+        clearInterval(refreshIntervalId);
+        setRefreshIntervalId(null);
+      }
+      // Очищаем данные пользователя при ошибке
+      localStorage.removeItem("user");
+      setUser(null);
+    }
+  };
+
+  const startTokenRefreshInterval = () => {
+    // Останавливаем предыдущий интервал, если он был
+    if (refreshIntervalId) {
+      clearInterval(refreshIntervalId);
+    }
+
+    // Запускаем новый интервал — каждые 200 секунд (200 000 мс)
+    const intervalId = setInterval(() => {
+      // Не запускаем новый запрос, если предыдущий ещё выполняется
+      if (!isLoading) {
+        handleRefreshToken();
+      }
+    }, 200000);
+
+    setRefreshIntervalId(intervalId);
+  };
+
+  const cancelRefreshTokenTimer = () => {
+    if (refreshIntervalId) {
+      clearInterval(refreshIntervalId);
+      setRefreshIntervalId(null);
+    }
+  };
+
+  const handleLogin = (userData) => {
+    localStorage.setItem("user", JSON.stringify(userData));
+    setUser(userData);
+    startTokenRefreshInterval();
   };
 
   const handleLogout = () => {
+    cancelRefreshTokenTimer();
     localStorage.removeItem("user");
     setUser(null);
   };
+
+  // Перезапускаем интервал при изменении isLoading (если нужно)
+  useEffect(() => {
+    if (user && !isLoading && !refreshIntervalId) {
+      startTokenRefreshInterval();
+    }
+  }, [user, isLoading, refreshIntervalId]);
 
   return (
     <>
@@ -93,7 +196,9 @@ function App() {
             onAuthButtonClick={user ? handleLogout : handleLogin}
           />
         </StyledWrapper>
-        <AudioPlayer />
+
+        {location.pathname !== "/login" &&
+          location.pathname !== "/registration" && <AudioPlayer />}
       </div>
     </>
   );

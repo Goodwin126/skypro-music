@@ -1,4 +1,39 @@
 import * as S from "./styles";
+import { styled, keyframes, css } from "styled-components";
+
+export const pulseAnimation = keyframes`
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    animation-timing-function: ease-in-out;
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.8);
+    animation-timing-function: ease-in-out;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+`;
+
+export const StyledAnimatedSvg = styled.svg`
+  display: block;
+  width: 12px;
+  height: 12px;
+  fill: transparent;
+  margin: 0 auto;
+  transform-origin: center center;
+
+  ${(props) =>
+    props.$animate &&
+    css`
+      animation: ${pulseAnimation} 0.7s infinite;
+      animation-play-state: ${props.$isPlaying ? "running" : "paused"};
+      will-change: transform, opacity;
+    `}
+`;
 
 export default function PlaylistItem({
   trackTitle,
@@ -10,7 +45,8 @@ export default function PlaylistItem({
   animate,
   isPlaying,
   sprite,
-  onClick,
+  onClickPlay,
+  onClickLike,
 }) {
   return (
     <S.StyledPlaylistItem>
@@ -18,7 +54,7 @@ export default function PlaylistItem({
         <S.StyledTrackTitle>
           <S.StyledTrackTitleImage>
             <S.StyledTrackTitleSvg aria-label="Иконка трека">
-              <S.StyledAnimatedSvg $animate={animate} $isPlaying={isPlaying}>
+              <StyledAnimatedSvg $animate={animate} $isPlaying={isPlaying}>
                 {sprite === "current-track-play" ? (
                   <svg
                     width="16"
@@ -37,11 +73,11 @@ export default function PlaylistItem({
                     <use href={sprite} />
                   </svg>
                 )}
-              </S.StyledAnimatedSvg>
+              </StyledAnimatedSvg>
             </S.StyledTrackTitleSvg>
           </S.StyledTrackTitleImage>
           <S.StyledTrackTitleText>
-            <S.StyledTrackTitleLink onClick={onClick}>
+            <S.StyledTrackTitleLink onClick={onClickPlay}>
               {trackTitle}
               <S.StyledTrackTitleSpan>
                 {trackSpanContent}
@@ -58,7 +94,7 @@ export default function PlaylistItem({
           <S.StyledTrackAlbumLink href="/">{trackAlbum}</S.StyledTrackAlbumLink>
         </S.StyledtrackAlbum>
         <S.StyledTrackTime>
-          <S.StyledTrackTimeSvg alt="time">
+          <S.StyledTrackTimeSvg alt="time" onClick={onClickLike}>
             {trackLike ? (
               <use href="/img/icon/sprite.svg#icon-like-press" />
             ) : (

@@ -58,7 +58,7 @@
   "scripts": {
     "start": "node scripts/start.js",
     "dev": "concurrently \"npm run server\" \"npm run start \"",
-    "server": "json-server -w server/db.json -p 3001",
+    "server": "node server/server.js",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js"
   },

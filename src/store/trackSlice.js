@@ -1,5 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
+// const BASE_URL = "https://skypro-music-api.skyeng.tech/";
+
+const BASE_URL = "http://localhost:3001/";
+
 const shuffleArray = (array) => {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -9,54 +13,13 @@ const shuffleArray = (array) => {
   return newArray;
 };
 
-//действие для регистрации пользователя
-export const registrationUser = createAsyncThunk(
-  "user/registration",
-  async (registrationData, { rejectWithValue }) => {
-    try {
-      const response = await fetch(
-        "https://skypro-music-api.skyeng.tech/user/signup/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(registrationData),
-        },
-      );
-
-      // Проверяем статус ответа
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-
-        // Для 400 возвращаем ошибки валидации
-        if (response.status === 400) {
-          return rejectWithValue(errorData);
-        }
-
-        // Для других ошибок — общее сообщение
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Успешный ответ (201)
-      const userData = await response.json();
-      return userData;
-    } catch (error) {
-      // Обработка сетевых ошибок и других исключений
-      return rejectWithValue({
-        error: error.message || "Произошла ошибка при регистрации",
-      });
-    }
-  },
-);
-
 // Асинхронное действие для загрузки треков
 export const loadTracks = createAsyncThunk(
   "tracks/loadTracks",
   async (_, { dispatch }) => {
     try {
       // Формируем полный URL: базовый URL + endpoint
-      const response = await fetch("http://localhost:3001/tracks");
+      const response = await fetch(`${BASE_URL}catalog/track/all/`);
 
       // Проверяем статус ответа HTTP (200–299 — успех)
       if (!response.ok) {
@@ -80,8 +43,10 @@ const tracksSlice = createSlice({
     user: null,
     userError: null,
     tracks: [],
+    isMyTracks: false,
     track: {
       trackPlaying: null,
+      isPlaying: false,
       isMixing: false,
     },
     isLoading: false,
@@ -93,7 +58,7 @@ const tracksSlice = createSlice({
       state.tracks = tracksList;
     },
     mixTrack(state, action) {
-      if (action.payload.isMixing === true) {
+      if (action.payload.isMixing === false) {
         state.tracks = shuffleArray(state.tracks);
       } else {
         return;
@@ -104,7 +69,7 @@ const tracksSlice = createSlice({
         state.track.trackPlaying = action.payload.trackName;
       }
     },
-    turnTrackTrackPlaying(state, action) {
+    turnTrackPlaying(state, action) {
       if (state.track.trackPlaying === null) return;
 
       const currentIndex = state.tracks.findIndex(
@@ -113,16 +78,61 @@ const tracksSlice = createSlice({
 
       if (currentIndex === -1) return;
 
+      // Функция для поиска следующего трека с учётом isMyTracks и trackLike
+      const findNextTrackIndex = (startIndex, direction) => {
+        const tracksLength = state.tracks.length;
+        let index = startIndex;
+
+        do {
+          index =
+            direction === "next"
+              ? (index + 1) % tracksLength
+              : (index - 1 + tracksLength) % tracksLength;
+
+          // Если isMyTracks === true, проверяем trackLike
+          if (state.isMyTracks) {
+            if (state.tracks[index].trackLike === true) {
+              return index;
+            }
+          } else {
+            // Если isMyTracks === false, берём любой трек
+            return index;
+          }
+        } while (index !== startIndex); // Продолжаем, пока не вернёмся к стартовой точке
+
+        // Если не нашли подходящий трек, возвращаем -1
+        return -1;
+      };
+
+      let nextTrackIndex = -1;
+
       if (action.payload.next) {
-        if (currentIndex < state.tracks.length - 1) {
-          state.track.trackPlaying = state.tracks[currentIndex + 1].trackName;
-        }
+        // Ищем следующий трек
+        nextTrackIndex = findNextTrackIndex(currentIndex, "next");
       } else {
-        if (currentIndex > 0) {
-          state.track.trackPlaying = state.tracks[currentIndex - 1].trackName;
-        }
+        // Ищем предыдущий трек
+        nextTrackIndex = findNextTrackIndex(currentIndex, "prev");
+      }
+
+      // Если нашли подходящий трек, устанавливаем его как текущий
+      if (nextTrackIndex !== -1) {
+        state.track.trackPlaying = state.tracks[nextTrackIndex].trackName;
       }
     },
+
+    setTrackLike(state, action) {
+      const trackName = action.payload.trackName;
+      const trackIndex = state.tracks.findIndex(
+        (track) => track.trackName === trackName,
+      );
+
+      if (trackIndex !== -1) {
+        // Обновляем флаг like у трека
+        state.tracks[trackIndex].trackLike =
+          !state.tracks[trackIndex].trackLike;
+      }
+    },
+
     setIsPlaying(state, action) {
       state.track.isPlaying = action.payload;
     },
@@ -141,6 +151,9 @@ const tracksSlice = createSlice({
     setLoop(state, action) {
       state.track.isLoop = action.payload;
     },
+    setIsMyTracks(state, action) {
+      state.isMyTracks = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -155,19 +168,6 @@ const tracksSlice = createSlice({
       .addCase(loadTracks.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.error.message;
-      })
-      .addCase(registrationUser.pending, (state) => {
-        state.isLoading = true;
-        state.userError = null;
-      })
-      .addCase(registrationUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.user = action.payload; // сохраняем данные пользователя
-        state.userError = null;
-      })
-      .addCase(registrationUser.rejected, (state, action) => {
-        state.isLoading = false;
-        state.userError = action.payload; // сохраняем ошибки валидации
       });
   },
 });
@@ -176,12 +176,14 @@ export const {
   setTracks,
   mixTrack,
   setTrackPlaying,
-  turnTrackTrackPlaying,
+  turnTrackPlaying,
   setIsPlaying,
   togglePlay,
   setCurrentTime,
   setVolume,
   setLoop,
+  setTrackLike,
+  setIsMyTracks,
 } = tracksSlice.actions;
 
 export default tracksSlice.reducer;

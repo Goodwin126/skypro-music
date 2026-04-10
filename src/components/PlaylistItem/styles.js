@@ -1,4 +1,4 @@
-import { styled, keyframes, css } from "styled-components";
+import { styled } from "styled-components";
 
 export const StyledPlaylistItem = styled.div`
   width: 100%;
@@ -35,8 +35,7 @@ export const StyledTrackTitleSvg = styled.svg`
   display: block;
   width: 18px;
   height: 17px;
-  fill: transparent;
-  stroke: #4e4e4e;
+
   margin: 0 auto;
   overflow: visible;
 `;
@@ -108,40 +107,6 @@ export const StyledtrackTimeText = styled.span`
   line-height: 24px;
   text-align: right;
   color: #696969;
-`;
-
-export const pulseAnimation = keyframes`
-  0% {
-    opacity: 1;
-    transform: scale(1);
-    animation-timing-function: ease-in-out;
-  }
-  50% {
-    opacity: 0.3;
-    transform: scale(0.8);
-    animation-timing-function: ease-in-out;
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-`;
-
-export const StyledAnimatedSvg = styled.svg`
-  display: block;
-  width: 12px;
-  height: 12px;
-  fill: transparent;
-  margin: 0 auto;
-  transform-origin: center center;
-
-  ${(props) =>
-    props.$animate &&
-    css`
-      animation: ${pulseAnimation} 0.7s infinite;
-      animation-play-state: ${props.$isPlaying ? "running" : "paused"};
-      will-change: transform, opacity;
-    `}
 `;
 
 export const StyledTrackTime = styled.div`

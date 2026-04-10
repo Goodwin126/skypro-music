@@ -1,6 +1,20 @@
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 
+export const StyledError = styled.span`
+  display: block;
+  color: #b71c1c;
+  font-size: 13px;
+  margin-top: 6px;
+  margin-left: 2px;
+  min-height: 16px; /* Чтобы не «прыгал» интерфейс при появлении ошибки */
+
+  /* Показывает ошибку только если есть контент */
+  &:empty {
+    display: none;
+  }
+`;
+
 export const StyledWrapper = styled.div`
   width: 100%;
   min-height: 100%;

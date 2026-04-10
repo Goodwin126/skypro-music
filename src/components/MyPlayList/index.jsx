@@ -5,18 +5,35 @@ import PlaylistItem from "../PlaylistItem";
 import SkeletonItem from "../SkeletonItem";
 
 import { useSelector, useDispatch } from "react-redux";
-import { setTrackPlaying, setIsPlaying } from "../../store/trackSlice";
+import {
+  setTrackPlaying,
+  setIsPlaying,
+  setTrackLike,
+  setIsMyTracks,
+} from "../../store/trackSlice";
 
 export default function MyPlayList() {
   const dispatch = useDispatch();
 
-  const { tracks, isLoading, trackPlaying, isPlaying } = useSelector(
+  const { tracks, isLoading, isMyTracks } = useSelector(
     (state) => state.storage,
+  );
+
+  const { trackPlaying, isPlaying } = useSelector(
+    (state) => state.storage.track,
   );
 
   const handleTrackClick = (trackName) => {
     dispatch(setTrackPlaying({ trackName }));
     dispatch(setIsPlaying(true));
+
+    if (isMyTracks === false) {
+      dispatch(setIsMyTracks(true));
+    }
+  };
+
+  const handelClickLike = (trackName) => {
+    dispatch(setTrackLike({ trackName }));
   };
 
   return (
@@ -63,7 +80,8 @@ export default function MyPlayList() {
                     trackLike={track.trackLike}
                     animate={track.trackName === trackPlaying}
                     isPlaying={isPlaying}
-                    onClick={() => handleTrackClick(track.trackName)}
+                    onClickPlay={() => handleTrackClick(track.trackName)}
+                    onClickLike={() => handelClickLike(track.trackName)}
                   />
                 ) : null,
               )}
