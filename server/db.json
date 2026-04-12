@@ -1,0 +1,65 @@
+{
+  "tracks": [
+    {
+      "trackName": "Luke-Bergs-Bliss(chosic.com)",
+      "trackTitle": "Hyperreal",
+      "trackAuthor": "Flume",
+      "trackAlbum": "Skin",
+      "trackTime": "4:12",
+      "trackLike": false
+    },
+    {
+      "trackName": "alexander-nakarada-superepic(chosic.com)",
+      "trackTitle": "A Moment Apart",
+      "trackAuthor": "Odesza",
+      "trackAlbum": "A Moment Apart",
+      "trackTime": "5:03",
+      "trackLike": false
+    },
+    {
+      "trackName": "fm-freemusic-inspiring-optimistic-upbeat-energetic-guitar-rhythm(chosic.com)",
+      "trackTitle": "Kerala",
+      "trackAuthor": "Bonobo",
+      "trackAlbum": "Migration",
+      "trackTime": "4:47",
+      "trackLike": false
+    },
+    {
+      "trackName": "HEROICCC(chosic.com)",
+      "trackTitle": "Awake",
+      "trackAuthor": "Tycho",
+      "trackAlbum": "Awake",
+      "trackTime": "3:58",
+      "trackLike": false
+    },
+    {
+      "trackName": "Luke-Bergs-Take-It-Easy(chosic.com)",
+      "trackTitle": "Heat Waves",
+      "trackAuthor": "Glass Animals",
+      "trackAlbum": "Dreamland",
+      "trackTime": "3:54",
+      "trackLike": false
+    },
+    {
+      "trackName": "roa-music-summer-madness(chosic.com)",
+      "trackTitle": "Underwater",
+      "trackAuthor": "RÜFÜS DU SOL",
+      "trackAlbum": "Surrender",
+      "trackTime": "4:29",
+      "trackLike": false
+    }
+  ],
+  "signup": {
+    "email": "vasiliy@gmail.com",
+    "password": "asdhgjkflkg12312",
+    "username": "asd"
+  },
+  "login": {
+    "email": "vasiliy@gmail.com",
+    "password": "asd"
+  },
+  "tokens": {
+    "access": "mock-access-token-123",
+    "refresh": "mock-refresh-token-456"
+  }
+}

@@ -1,4 +1,8 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+
+// const BASE_URL = "https://skypro-music-api.skyeng.tech/";
+
+const BASE_URL = "http://localhost:3001/";
 
 const shuffleArray = (array) => {
   const newArray = [...array];
@@ -9,113 +13,162 @@ const shuffleArray = (array) => {
   return newArray;
 };
 
+// Асинхронное действие для загрузки треков
+export const loadTracks = createAsyncThunk(
+  "tracks/loadTracks",
+  async (_, { dispatch }) => {
+    try {
+      // Формируем полный URL: базовый URL + endpoint
+      const response = await fetch(`${BASE_URL}catalog/track/all/`);
+
+      // Проверяем статус ответа HTTP (200–299 — успех)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Парсим JSON из тела ответа
+      const data = await response.json();
+
+      return data; // Возвращаем данные для fulfilled-состояния
+    } catch (error) {
+      // Пробрасываем ошибку для rejected-состояния
+      throw error;
+    }
+  },
+);
+
 const tracksSlice = createSlice({
-  name: "tracks",
+  name: "storage",
   initialState: {
-    tracks: [], // исходный лист для рендеринга
-    tracksListPlaying: [], // лист проигрывания
-    trackPlaying: null,
-    isPlaying: false,
+    user: null,
+    userError: null,
+    tracks: [],
+    isMyTracks: false,
+    track: {
+      trackPlaying: null,
+      isPlaying: false,
+      isMixing: false,
+    },
+    isLoading: false,
+    error: null,
   },
   reducers: {
     setTracks(state, action) {
-      // Если payload передан — используем его, иначе берём дефолтный список
-      const tracksList = action.payload || [
-        {
-          trackName: "Luke-Bergs-Bliss(chosic.com)",
-          trackTitle: "Hyperreal",
-          trackAuthor: "Flume",
-          trackAlbum: "Skin",
-          trackTime: "4:12",
-        },
-        {
-          trackName: "alexander-nakarada-superepic(chosic.com)",
-          trackTitle: "A Moment Apart",
-          trackAuthor: "Odesza",
-          trackAlbum: "A Moment Apart",
-          trackTime: "5:03",
-        },
-        {
-          trackName:
-            "fm-freemusic-inspiring-optimistic-upbeat-energetic-guitar-rhythm(chosic.com)",
-          trackTitle: "Kerala",
-          trackAuthor: "Bonobo",
-          trackAlbum: "Migration",
-          trackTime: "4:47",
-        },
-        {
-          trackName: "HEROICCC(chosic.com)",
-          trackTitle: "Awake",
-          trackAuthor: "Tycho",
-          trackAlbum: "Awake",
-          trackTime: "3:58",
-        },
-        {
-          trackName: "Luke-Bergs-Take-It-Easy(chosic.com)",
-          trackTitle: "Heat Waves",
-          trackAuthor: "Glass Animals",
-          trackAlbum: "Dreamland",
-          trackTime: "3:54",
-        },
-        {
-          trackName: "roa-music-summer-madness(chosic.com)",
-          trackTitle: "Underwater",
-          trackAuthor: "RÜFÜS DU SOL",
-          trackAlbum: "Surrender",
-          trackTime: "4:29",
-        },
-      ];
-
+      const tracksList = action.payload;
       state.tracks = tracksList;
-      state.tracksListPlaying = tracksList;
     },
-
     mixTrack(state, action) {
       if (action.payload.isMixing === false) {
-        state.tracksListPlaying = shuffleArray(state.tracks);
+        state.tracks = shuffleArray(state.tracks);
       } else {
-        state.tracksListPlaying = state.tracks;
+        return;
       }
     },
-
     setTrackPlaying(state, action) {
       if (action.payload?.trackName) {
-        state.trackPlaying = action.payload.trackName;
+        state.track.trackPlaying = action.payload.trackName;
       }
     },
+    turnTrackPlaying(state, action) {
+      if (state.track.trackPlaying === null) return;
 
-    turnTrackTrackPlaying(state, action) {
-      if (state.trackPlaying === null) return;
-
-      const currentIndex = state.tracksListPlaying.findIndex(
-        (track) => track.trackName === state.trackPlaying,
+      const currentIndex = state.tracks.findIndex(
+        (track) => track.trackName === state.track.trackPlaying,
       );
 
       if (currentIndex === -1) return;
 
+      // Функция для поиска следующего трека с учётом isMyTracks и trackLike
+      const findNextTrackIndex = (startIndex, direction) => {
+        const tracksLength = state.tracks.length;
+        let index = startIndex;
+
+        do {
+          index =
+            direction === "next"
+              ? (index + 1) % tracksLength
+              : (index - 1 + tracksLength) % tracksLength;
+
+          // Если isMyTracks === true, проверяем trackLike
+          if (state.isMyTracks) {
+            if (state.tracks[index].trackLike === true) {
+              return index;
+            }
+          } else {
+            // Если isMyTracks === false, берём любой трек
+            return index;
+          }
+        } while (index !== startIndex); // Продолжаем, пока не вернёмся к стартовой точке
+
+        // Если не нашли подходящий трек, возвращаем -1
+        return -1;
+      };
+
+      let nextTrackIndex = -1;
+
       if (action.payload.next) {
-        // Если есть следующий трек — переключаемся
-        if (currentIndex < state.tracksListPlaying.length - 1) {
-          state.trackPlaying =
-            state.tracksListPlaying[currentIndex + 1].trackName;
-        }
-        // Если это последний трек — можно:
-        // - остановить плеер: state.trackPlaying = null;
-        // - зациклить плейлист: state.trackPlaying = state.tracksListPlaying[0].trackName;
+        // Ищем следующий трек
+        nextTrackIndex = findNextTrackIndex(currentIndex, "next");
       } else {
-        // Логика для "предыдущего трека" (как раньше)
-        if (currentIndex > 0) {
-          state.trackPlaying =
-            state.tracksListPlaying[currentIndex - 1].trackName;
-        }
+        // Ищем предыдущий трек
+        nextTrackIndex = findNextTrackIndex(currentIndex, "prev");
+      }
+
+      // Если нашли подходящий трек, устанавливаем его как текущий
+      if (nextTrackIndex !== -1) {
+        state.track.trackPlaying = state.tracks[nextTrackIndex].trackName;
       }
     },
+
+    setTrackLike(state, action) {
+      const trackName = action.payload.trackName;
+      const trackIndex = state.tracks.findIndex(
+        (track) => track.trackName === trackName,
+      );
+
+      if (trackIndex !== -1) {
+        // Обновляем флаг like у трека
+        state.tracks[trackIndex].trackLike =
+          !state.tracks[trackIndex].trackLike;
+      }
+    },
+
     setIsPlaying(state, action) {
-      state.isPlaying = action.payload;
+      state.track.isPlaying = action.payload;
     },
     togglePlay(state) {
-      state.isPlaying = !state.isPlaying;
+      state.track.isPlaying = !state.isPlaying;
     },
+
+    setCurrentTime(state, action) {
+      state.track.currentTime = action.payload;
+    },
+
+    setVolume(state, action) {
+      state.track.volume = action.payload;
+    },
+
+    setLoop(state, action) {
+      state.track.isLoop = action.payload;
+    },
+    setIsMyTracks(state, action) {
+      state.isMyTracks = action.payload;
+    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(loadTracks.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(loadTracks.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.tracks = action.payload;
+      })
+      .addCase(loadTracks.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message;
+      });
   },
 });
 
@@ -123,8 +176,14 @@ export const {
   setTracks,
   mixTrack,
   setTrackPlaying,
-  turnTrackTrackPlaying,
+  turnTrackPlaying,
   setIsPlaying,
   togglePlay,
+  setCurrentTime,
+  setVolume,
+  setLoop,
+  setTrackLike,
+  setIsMyTracks,
 } = tracksSlice.actions;
+
 export default tracksSlice.reducer;

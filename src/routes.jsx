@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { ProtectedRoute } from "./сomponent/protected-route";
+import { ProtectedRoute } from "./components/protected-route";
 import { Main } from "./pages/main";
 import { Login } from "./pages/login";
 import { Collections } from "./pages/collections";
@@ -29,7 +29,7 @@ export const AppRoutes = ({ user, onAuthButtonClick }) => {
         path="/my-playlist"
         element={
           <ProtectedRoute isAllowed={Boolean(user)}>
-            <MyPlaylist />
+            <MyPlaylist onAuthButtonClick={onAuthButtonClick} />
           </ProtectedRoute>
         }
       ></Route>
