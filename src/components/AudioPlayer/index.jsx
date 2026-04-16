@@ -30,8 +30,11 @@ export default function AudioPlayer() {
   // состояние зациклености
   const [isLoop, setLoop] = useState(false);
 
-  //  состояние загрузки
+  //  состояние время проигрывания трека
   const [currentTime, setCurrentTime] = useState(0);
+
+  //  //  состояние время паузы трека
+  // const [currentTime, setCurrentTime] = useState(0);
 
   // состояние названия трека
   const [trackName, setTrackName] = useState("Неизвестный трек"); // инициализируем значением по умолчанию
@@ -74,13 +77,11 @@ export default function AudioPlayer() {
       dispatch(turnTrackPlaying({ next: true })); // переходим к следующему треку
     };
     const handleCanPlay = async () => {
-      if (isPlaying) {
-        try {
-          await audio.play();
-        } catch (err) {
-          console.error("Не удалось запустить воспроизведение:", err);
-          dispatch(setIsPlaying(false));
-        }
+      try {
+        await audio.play();
+      } catch (err) {
+        console.error("Не удалось запустить воспроизведение:", err);
+        dispatch(setIsPlaying(false));
       }
     };
 
@@ -100,7 +101,7 @@ export default function AudioPlayer() {
       audio.removeEventListener("canplaythrough", handleCanPlay);
       audio.removeEventListener("error", handleError);
     };
-  }, [nameTrackPlaying, isPlaying, dispatch]);
+  }, [nameTrackPlaying, dispatch]);
 
   // обновление метаданных — зависит от currentTrack
   useEffect(() => {
@@ -113,21 +114,43 @@ export default function AudioPlayer() {
   const handlePlay = useCallback(async () => {
     const audio = audioRef.current;
     if (!audio || !pathTrack) return; // проверяем наличие трека
+
     try {
+      // Сначала ждём готовности аудио
+      await new Promise((resolve) => {
+        const onCanPlay = () => {
+          audio.removeEventListener("canplaythrough", onCanPlay);
+          resolve();
+        };
+        audio.addEventListener("canplaythrough", onCanPlay);
+
+        // Если уже готово, сразу разрешаем
+        if (audio.readyState >= 3) {
+          resolve();
+        }
+      });
+
+      // Теперь устанавливаем время и запускаем воспроизведение
+      if (currentTime !== 0) {
+        audio.currentTime = currentTime;
+      }
       await audio.play();
       dispatch(setIsPlaying(true));
     } catch (err) {
       console.error("Ошибка воспроизведения:", err);
       dispatch(setIsPlaying(false));
     }
-  }, [pathTrack, dispatch]);
+  }, [pathTrack, dispatch, currentTime]);
 
   const handlePause = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    audio.pause();
-    dispatch(setIsPlaying(false));
+    // Сначала считываем текущее время ДО паузы
+    const current = audio.currentTime;
+    setCurrentTime(current); // Сохраняем в состояние
+    audio.pause(); // Ставим на паузу
+    dispatch(setIsPlaying(false)); // Обновляем состояние проигрывания
   }, [dispatch]);
 
   // переключение между play/pause
@@ -135,16 +158,20 @@ export default function AudioPlayer() {
     isPlaying ? handlePause() : handlePlay();
   }, [isPlaying, handlePlay, handlePause]);
 
-  // Обработчик изменения времени
+  // обработчик изменения времени
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const handleTimeUpdate = () => {
+      // Только если аудио активно воспроизводится
+      if (!isPlaying) return;
+      setCurrentTime(audio.currentTime);
+    };
     audio.addEventListener("timeupdate", handleTimeUpdate);
 
     return () => audio.removeEventListener("timeupdate", handleTimeUpdate);
-  }, []);
+  }, [isPlaying]);
 
   // Обработка громкости
   const handleVolumeChange = useCallback((e) => {
