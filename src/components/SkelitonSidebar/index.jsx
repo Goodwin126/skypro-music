@@ -1,6 +1,6 @@
 import * as S from "../SidebarItem/styles";
 
-export function SidbarSkeliton() {
+export default function SidbarSkeliton() {
   return (
     <div>
       <S.StyledSidebarItem>

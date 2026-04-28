@@ -9,7 +9,7 @@ export default function SideBarPersonal({ sprite, onAuthButtonClick }) {
       </S.StyledSidebarPersonalName>{" "}
       <S.StyledSidebarIcon>
         {" "}
-        <svg xmlns="http://www.w3.org/2000/svg" alt="logout">
+        <svg xmlns="http://www.w3.org/2000/svg" aria-label="logout">
           {" "}
           <use href={`${sprite}#logout`} />{" "}
         </svg>{" "}

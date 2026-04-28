@@ -279,7 +279,7 @@ export default function AudioPlayer() {
             {isLoading ? (
               <SkelitonAudioPlay />
             ) : (
-              <TrackPlay trakcName={trackName} trackAuthor={trackAuthor} />
+              <TrackPlay trackName={trackName} trackAuthor={trackAuthor} />
             )}
             <S.StyledTrackPlayLikeDis>
               <S.StyledTrackPlayLike>

@@ -13,14 +13,14 @@ export default function SkelitonAudioPlay() {
       <StyledTrackPlayContain>
         <StyledTrackPlayImage>
           <StyledTrackPlaySvg alt="music">
-            <img alt="square" src="/img/skelitons/Skeleton_square.svg" />
+            <img alt="square_1" src="/img/skelitons/Skeleton_square.svg" />
           </StyledTrackPlaySvg>
         </StyledTrackPlayImage>
         <StyledTrackPlayAuthor>
-          <img alt="square" src="/img/skelitons/Skeleton_rectangle04.svg" />
+          <img alt="square_2" src="/img/skelitons/Skeleton_rectangle04.svg" />
         </StyledTrackPlayAuthor>
         <StyledTrackPlayAlbum>
-          <img alt="square" src="/img/skelitons/Skeleton_rectangle04.svg" />
+          <img alt="square_3" src="/img/skelitons/Skeleton_rectangle04.svg" />
         </StyledTrackPlayAlbum>
       </StyledTrackPlayContain>
     </StyledPlayerTrackPlay>
