@@ -1,26 +1,26 @@
 import * as S from "./styles";
 import SideBarPersonal from "../sideBarPersonal";
 import SidebarItem from "../SidebarItem";
-import { SidbarSkeliton } from "../SkelitonSidebar";
+import SidbarSkeliton from "../SkelitonSidebar";
 
 export default function Sidebar({ isLoading, onAuthButtonClick }) {
   return (
-    <S.StyledMainSidebar>
+    <S.StyledMainSidebar role="region" aria-label="Main sidebar">
       <SideBarPersonal
         sprite="/img/icon/sprite.svg"
         onAuthButtonClick={onAuthButtonClick}
       />
 
-      <S.StyledSidebarBlock>
+      <S.StyledSidebarBlock role="region" aria-label="sidebar block">
         <S.StyledSidebarList>
           {isLoading ? (
             <SidbarSkeliton />
           ) : (
-            <>
+            <div>
               <SidebarItem playlist="/img/playlist01.png" id="1" />
               <SidebarItem playlist="/img/playlist02.png" id="2" />
               <SidebarItem playlist="/img/playlist03.png" id="3" />
-            </>
+            </div>
           )}
         </S.StyledSidebarList>
       </S.StyledSidebarBlock>

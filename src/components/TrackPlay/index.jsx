@@ -7,8 +7,8 @@ const truncateText = (text, maxLength) => {
   return text.slice(0, maxLength) + "...";
 };
 
-export default function TrackPlay({ trakcName, trackAuthor }) {
-  const truncatedTrackName = truncateText(trakcName, 5);
+export default function TrackPlay({ trackName, trackAuthor }) {
+  const truncatedTrackName = truncateText(trackName, 5);
   const truncatedTrackAuthor = truncateText(trackAuthor, 5);
 
   return (
@@ -21,7 +21,7 @@ export default function TrackPlay({ trakcName, trackAuthor }) {
             viewBox="0 0 18 17"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            alt="music"
+            aria-label="music"
           >
             <use href="/img/icon/sprite.svg#icon-note" />
           </S.StyledTrackPlaySvg>
