@@ -32,7 +32,7 @@ export default function SearchByMenu() {
       <S.StyledFilterTitle>Искать по:</S.StyledFilterTitle>
       <S.StyledSearchByCategory>
         {activeFilter === 1 && (
-          <S.StyledSearchByItemsList>
+          <S.StyledSearchByItemsList data-testid="singers-list">
             {listSingers.map((singer, index) => (
               <S.StyledSearchByItem key={index}>{singer}</S.StyledSearchByItem>
             ))}
@@ -44,7 +44,7 @@ export default function SearchByMenu() {
       </S.StyledFilterButton>
       <S.StyledSearchByCategory>
         {activeFilter === 2 && (
-          <S.StyledSearchByItemsList>
+          <S.StyledSearchByItemsList data-testid="years-list">
             {listYears.map((year, index) => (
               <S.StyledSearchByItem key={year}>{year}</S.StyledSearchByItem>
             ))}
@@ -56,7 +56,7 @@ export default function SearchByMenu() {
       </S.StyledFilterButton>
       <S.StyledSearchByCategory>
         {activeFilter === 3 && (
-          <S.StyledSearchByItemsList>
+          <S.StyledSearchByItemsList data-testid="genre-list">
             {listGenre.map((genre, index) => (
               <S.StyledSearchByItem key={index}>{genre}</S.StyledSearchByItem>
             ))}

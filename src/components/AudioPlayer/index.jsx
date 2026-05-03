@@ -200,7 +200,7 @@ export default function AudioPlayer() {
   }, [isLoop]);
 
   return (
-    <S.StyledBar>
+    <S.StyledBar data-testid="audio-player">
       <audio ref={audioRef}>
         <source src={pathTrack} type="audio/mpeg" />
       </audio>

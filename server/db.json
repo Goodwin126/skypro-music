@@ -50,13 +50,13 @@
     }
   ],
   "signup": {
-    "email": "vasiliy@gmail.com",
-    "password": "asdhgjkflkg12312",
-    "username": "asd"
+    "email": "loogalas26@gmail.com",
+    "password": "asdasd",
+    "username": "asdasd"
   },
   "login": {
     "email": "vasiliy@gmail.com",
-    "password": "ahsgfdh"
+    "password": "asdasdhjasd"
   },
   "tokens": {
     "access": "mock-access-token-123",

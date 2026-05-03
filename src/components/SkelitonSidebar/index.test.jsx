@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import SidbarSkeliton from "./index";
 
-jest.mock("../SidebarItem/styles", () => ({
+vi.mock("../SidebarItem/styles", () => ({
   StyledSidebarItem: "div",
   StyledSidebarImg: "img",
 }));

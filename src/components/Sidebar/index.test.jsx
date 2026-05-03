@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import SidbarSkeliton from "./index";
 
 // Мок стилей — только то, что нужно для компонента
-jest.mock("../SidebarItem/styles", () => ({
+vi.mock("../SidebarItem/styles", () => ({
   StyledSidebarItem: (props) => <div {...props} data-testid="styled-item" />,
   StyledSidebarImg: (props) => (
     <img

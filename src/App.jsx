@@ -69,19 +69,23 @@ function App() {
   const location = useLocation();
   const dispatch = useDispatch();
 
-  const [refreshTokenData, { isLoading, Error }] =
+  const [refreshTokenData, { isLoading, error }] =
     useRefreshTokenDataMutation();
 
   useEffect(() => {
     dispatch(loadTracks());
   }, [dispatch]);
 
-  // Инициализация состояния с парсингом JSON
+  // Инициализация состояния с улучшенной обработкой ошибок
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
       try {
-        return JSON.parse(savedUser);
+        const parsedUser = JSON.parse(savedUser);
+        // Дополнительная проверка структуры данных
+        if (parsedUser && typeof parsedUser === "object") {
+          return parsedUser;
+        }
       } catch (e) {
         console.error("Ошибка парсинга user из localStorage:", e);
         return null;
