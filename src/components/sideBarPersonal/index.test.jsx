@@ -3,18 +3,18 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import SideBarPersonal from "./index";
 
 // Мок стилизованных компонентов — возвращаем простые HTML-теги
-jest.mock("./styles", () => ({
+vi.mock("./styles", () => ({
   StyledSidebarPersonalt: "div",
   StyledSidebarPersonalName: "div",
   StyledSidebarIcon: "div",
 }));
 
 describe("SideBarPersonal", () => {
-  const mockOnAuthButtonClick = jest.fn();
+  const mockOnAuthButtonClick = vi.fn();
   const mockSprite = "/sprite.svg";
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("render the component without errors", () => {

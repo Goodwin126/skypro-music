@@ -7,6 +7,7 @@ export default function ProgressBar({ audio, currentTime }) {
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
+
   if (!audio) {
     return null;
   }
@@ -25,6 +26,8 @@ export default function ProgressBar({ audio, currentTime }) {
 
   // Обработчик клика по треку (альтернативный способ перемотки)
   const handleMouseClick = (e) => {
+    if (!audio.duration) return; // Защита от неопределённой длительности
+
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const percent = (x / rect.width) * 100;
@@ -46,7 +49,7 @@ export default function ProgressBar({ audio, currentTime }) {
         value={progress.toFixed(1)}
         onChange={handleChange}
         step="0.1"
-        $color={S.PRIMARY_COLOR}
+        color={S.PRIMARY_COLOR}
         aria-label="Прогресс воспроизведения"
         onClick={handleMouseClick}
         onTouchMove={(e) => handleMouseClick(e.touches[0])}

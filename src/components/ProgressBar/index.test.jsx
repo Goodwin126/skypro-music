@@ -1,23 +1,24 @@
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import ProgressBar from "./index";
 
-jest.mock("./styles", () => ({
+vi.mock("./styles", () => ({
   StyledTime: "div",
   StyledAllTime: "span",
   StyledCurrentTime: "span",
   StyledProgressInput: "input",
+  PRIMARY_COLOR: "#000",
 }));
 
 describe("ProgressBar", () => {
   let mockAudio;
 
   beforeEach(() => {
-    mockAudio = { duration: 100 };
+    mockAudio = { duration: 100, currentTime: 0 };
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("возвращает null, если audio не передан", () => {
@@ -28,8 +29,8 @@ describe("ProgressBar", () => {
   it("отображает время в формате MM:SS", () => {
     render(<ProgressBar audio={mockAudio} currentTime={45} />); // 0:45
 
-    const allTime = screen.getByText("1:40");
-    const currentTime = screen.getByText("0:45");
+    const allTime = screen.getByText("1:40"); // 100 сек → 1:40
+    const currentTime = screen.getByText("0:45"); // 45 сек → 0:45
 
     expect(allTime).toBeInTheDocument();
     expect(currentTime).toBeInTheDocument();
@@ -60,5 +61,30 @@ describe("ProgressBar", () => {
       name: "Прогресс воспроизведения",
     });
     expect(progressInput).toHaveValue("75.0");
+  });
+
+  it("обновляет currentTime аудио при изменении слайдера", async () => {
+    const mockAudioWithSetter = {
+      duration: 100,
+      _currentTime: 0,
+      get currentTime() {
+        return this._currentTime;
+      },
+      set currentTime(value) {
+        this._currentTime = value;
+      },
+    };
+
+    render(<ProgressBar audio={mockAudioWithSetter} currentTime={0} />);
+
+    const progressInput = screen.getByRole("slider", {
+      name: "Прогресс воспроизведения",
+    });
+
+    await act(async () => {
+      fireEvent.change(progressInput, { target: { value: "50" } });
+    });
+
+    expect(mockAudioWithSetter.currentTime).toBeCloseTo(50, 1);
   });
 });

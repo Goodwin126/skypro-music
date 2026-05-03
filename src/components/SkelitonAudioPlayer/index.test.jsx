@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import SkelitonAudioPlay from "./index";
 
 // Мок стилизованных компонентов — возвращаем простые HTML-теги
-jest.mock("../TrackPlay/styles", () => ({
+vi.mock("../TrackPlay/styles", () => ({
   StyledPlayerTrackPlay: "div",
   StyledTrackPlayContain: "div",
   StyledTrackPlayImage: "div",

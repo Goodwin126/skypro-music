@@ -1,12 +1,11 @@
 import React from "react";
 import { screen } from "@testing-library/react";
-import { customRender } from "../../test.utils";
+import { customRender } from "../../test.utils.jsx";
 import TrackPlay from "./index";
 
 describe("<TrackPlay />", () => {
   it("should render track name and author with truncation", () => {
     const longTrackName = "Длинное название трека";
-
     const longTrackAuthor = "Очень длинное имя автора песни";
 
     customRender(

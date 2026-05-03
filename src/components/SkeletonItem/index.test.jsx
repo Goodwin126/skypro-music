@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import SkeletonItem from "./index";
 
 // Мок стилизованных компонентов — возвращаем простые HTML-теги
-jest.mock("../PlaylistItem/styles", () => ({
+vi.mock("../PlaylistItem/styles", () => ({
   StyledPlaylistItem: "div",
   StyledPlaylistTrack: "div",
   StyledTrackTitle: "div",
