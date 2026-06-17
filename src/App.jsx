@@ -101,7 +101,7 @@ function App() {
     // Проверяем, есть ли данные в localStorage
     const dataString = localStorage.getItem("user");
     if (!dataString) {
-      console.log("Данные не найдены в localStorage");
+      console.warn("Данные не найдены в localStorage");
       return;
     }
 
@@ -127,10 +127,6 @@ function App() {
 
         // Обновляем состояние компонента
         setUser(updatedUserData);
-
-        console.log("Токен успешно обновлён:", result);
-        console.log("access = ", result.access);
-        console.log("refresh = ", newRefresh);
       } else {
         throw new Error("Ответ сервера не содержит access-токен");
       }

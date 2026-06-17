@@ -6,6 +6,11 @@
       "trackAuthor": "Flume",
       "trackAlbum": "Skin",
       "trackTime": "4:12",
+      "trackGenre": "Rock",
+      "trackPlaylistDay": false,
+      "track100DanceTrack": true,
+      "trackIndieCharge": false,
+      "trackYear": "1997",
       "trackLike": false
     },
     {
@@ -14,6 +19,11 @@
       "trackAuthor": "Odesza",
       "trackAlbum": "A Moment Apart",
       "trackTime": "5:03",
+      "trackGenre": "Hip-hop",
+      "trackPlaylistDay": true,
+      "track100DanceTrack": false,
+      "trackIndieCharge": true,
+      "trackYear": "2014",
       "trackLike": false
     },
     {
@@ -22,6 +32,11 @@
       "trackAuthor": "Bonobo",
       "trackAlbum": "Migration",
       "trackTime": "4:47",
+      "trackGenre": "Pop",
+      "trackPlaylistDay": true,
+      "track100DanceTrack": false,
+      "trackIndieCharge": false,
+      "trackYear": "1986",
       "trackLike": false
     },
     {
@@ -30,6 +45,11 @@
       "trackAuthor": "Tycho",
       "trackAlbum": "Awake",
       "trackTime": "3:58",
+      "trackGenre": "Indie",
+      "trackPlaylistDay": false,
+      "track100DanceTrack": false,
+      "trackIndieCharge": true,
+      "trackYear": "1998",
       "trackLike": false
     },
     {
@@ -38,6 +58,11 @@
       "trackAuthor": "Glass Animals",
       "trackAlbum": "Dreamland",
       "trackTime": "3:54",
+      "trackGenre": "Rock",
+      "trackPlaylistDay": true,
+      "track100DanceTrack": false,
+      "trackIndieCharge": false,
+      "trackYear": "2011",
       "trackLike": false
     },
     {
@@ -46,6 +71,11 @@
       "trackAuthor": "RÜFÜS DU SOL",
       "trackAlbum": "Surrender",
       "trackTime": "4:29",
+      "trackGenre": "Techno",
+      "trackPlaylistDay": true,
+      "track100DanceTrack": true,
+      "trackIndieCharge": true,
+      "trackYear": "2006",
       "trackLike": false
     }
   ],
@@ -56,7 +86,7 @@
   },
   "login": {
     "email": "vasiliy@gmail.com",
-    "password": "asdasdhjasd"
+    "password": "asda231"
   },
   "tokens": {
     "access": "mock-access-token-123",

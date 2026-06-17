@@ -46,6 +46,7 @@ const tracksSlice = createSlice({
     isMyTracks: false,
     track: {
       trackPlaying: null,
+      trackLike: false,
       isPlaying: false,
       isMixing: false,
     },
@@ -67,6 +68,12 @@ const tracksSlice = createSlice({
     setTrackPlaying(state, action) {
       if (action.payload?.trackName) {
         state.track.trackPlaying = action.payload.trackName;
+        const trackIndex = state.tracks.findIndex(
+          (track) => track.trackName === action.payload.trackName,
+        );
+        if (state.tracks[trackIndex].trackLike) {
+          state.track.trackLike = true;
+        }
       }
     },
     turnTrackPlaying(state, action) {
@@ -127,9 +134,28 @@ const tracksSlice = createSlice({
       );
 
       if (trackIndex !== -1) {
-        // Обновляем флаг like у трека
         state.tracks[trackIndex].trackLike =
           !state.tracks[trackIndex].trackLike;
+      }
+    },
+    setTrackOnlyLike(state, action) {
+      const trackName = action.payload.trackName;
+      const trackIndex = state.tracks.findIndex(
+        (track) => track.trackName === trackName,
+      );
+
+      if (trackIndex !== -1) {
+        state.tracks[trackIndex].trackLike = true;
+      }
+    },
+    setTrackOnlyDislike(state, action) {
+      const trackName = action.payload.trackName;
+      const trackIndex = state.tracks.findIndex(
+        (track) => track.trackName === trackName,
+      );
+
+      if (trackIndex !== -1) {
+        state.tracks[trackIndex].trackLike = false;
       }
     },
 
@@ -183,6 +209,8 @@ export const {
   setVolume,
   setLoop,
   setTrackLike,
+  setTrackOnlyLike,
+  setTrackOnlyDislike,
   setIsMyTracks,
 } = tracksSlice.actions;
 

@@ -80,8 +80,26 @@ export const StyledFilterButton = styled(StyledBtnText)`
   border: 1px solid #ffffff;
   border-radius: 60px;
   padding: 6px 20px;
+  position: relative; /* важно для позиционирования счётчика */
 
   &:not(:last-child) {
     margin-right: 10px;
   }
+`;
+
+export const StyledGenreCounter = styled.div`
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #b672ff;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
 `;

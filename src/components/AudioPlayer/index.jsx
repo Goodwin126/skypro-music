@@ -5,6 +5,8 @@ import {
   mixTrack,
   turnTrackPlaying,
   setIsPlaying,
+  setTrackOnlyLike,
+  setTrackOnlyDislike,
 } from "../../store/trackSlice";
 
 import TrackPlay from "../TrackPlay";
@@ -51,6 +53,17 @@ export default function AudioPlayer() {
   const nameTrackPlaying = useSelector(
     (state) => state.storage.track.trackPlaying,
   );
+
+  const trackLike = useSelector((state) => state.storage.track.trackLike);
+
+  const handelClickLike = () => {
+    const trackName = nameTrackPlaying;
+    dispatch(setTrackOnlyLike({ trackName }));
+  };
+  const handelClickDislike = () => {
+    const trackName = nameTrackPlaying;
+    dispatch(setTrackOnlyDislike({ trackName }));
+  };
 
   // обновляем currentTrack при смене nameTrackPlaying
   useMemo(() => {
@@ -283,14 +296,17 @@ export default function AudioPlayer() {
             )}
             <S.StyledTrackPlayLikeDis>
               <S.StyledTrackPlayLike>
-                <S.StyledTrackPlayLikeSvg alt="like" onClick={handleNotWork}>
+                <S.StyledTrackPlayLikeSvg
+                  alt="like"
+                  onClick={() => handelClickLike()}
+                >
                   <use href="/img/icon/sprite.svg#icon-like" />
                 </S.StyledTrackPlayLikeSvg>
               </S.StyledTrackPlayLike>
               <S.StyledTrackPlayDisLike>
                 <S.StyledTrackPlayDislikeSvg
                   alt="dislike"
-                  onClick={handleNotWork}
+                  onClick={() => handelClickDislike()}
                 >
                   <use href="/img/icon/sprite.svg#icon-dislike" />
                 </S.StyledTrackPlayDislikeSvg>

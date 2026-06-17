@@ -17,9 +17,12 @@ export default function Sidebar({ isLoading, onAuthButtonClick }) {
             <SidbarSkeliton />
           ) : (
             <div>
-              <SidebarItem playlist="/img/playlist01.png" id="1" />
-              <SidebarItem playlist="/img/playlist02.png" id="2" />
-              <SidebarItem playlist="/img/playlist03.png" id="3" />
+              <SidebarItem playlist="/img/playlist01.png" id="Плейлист дня" />
+              <SidebarItem
+                playlist="/img/playlist02.png"
+                id="100 танцевальных хитов"
+              />
+              <SidebarItem playlist="/img/playlist03.png" id="Инди-заряд" />
             </div>
           )}
         </S.StyledSidebarList>

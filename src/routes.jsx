@@ -20,7 +20,7 @@ export const AppRoutes = ({ user, onAuthButtonClick }) => {
         path="/collections/:id"
         element={
           <ProtectedRoute isAllowed={Boolean(user)}>
-            <Collections />
+            <Collections onAuthButtonClick={onAuthButtonClick} />
           </ProtectedRoute>
         }
       ></Route>
