@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-// const BASE_URL = "https://skypro-music-api.skyeng.tech/";
+const BASE_URL = "https://skypro-music-api.skyeng.tech/";
 
-const BASE_URL = "http://localhost:3001/";
+// const BASE_URL = "http://localhost:3001/";
 
 const shuffleArray = (array) => {
   const newArray = [...array];
