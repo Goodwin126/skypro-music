@@ -1,7 +1,8 @@
-import * as S from "./styles";
-import { Link, useNavigate } from "react-router-dom";
-import { useSendingSigningUpDataMutation } from "../../services/enter";
-import { useState, useCallback } from "react";
+import React from 'react';
+import * as S from './styles';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSendingSigningUpDataMutation } from '../../services/enter';
+import { useState, useCallback } from 'react';
 
 export const Registration = () => {
   const [errors, setErrors] = useState({});
@@ -10,9 +11,9 @@ export const Registration = () => {
     useSendingSigningUpDataMutation();
 
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    username: "",
+    email: '',
+    password: '',
+    username: '',
   });
 
   const handleSubmit = useCallback(
@@ -23,21 +24,21 @@ export const Registration = () => {
 
       // Валидация полей
       if (!formData.email) {
-        newErrors.email = "Email обязателен для заполнения";
+        newErrors.email = 'Email обязателен для заполнения';
       } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-        newErrors.email = "Введите корректный email";
+        newErrors.email = 'Введите корректный email';
       }
 
       if (!formData.password) {
-        newErrors.password = "Пароль обязателен для заполнения";
+        newErrors.password = 'Пароль обязателен для заполнения';
       } else if (formData.password.length < 6) {
-        newErrors.password = "Пароль должен содержать минимум 6 символов";
+        newErrors.password = 'Пароль должен содержать минимум 6 символов';
       }
 
       if (!formData.username) {
-        newErrors.username = "Логин обязателен для заполнения";
+        newErrors.username = 'Логин обязателен для заполнения';
       } else if (formData.username.length < 3) {
-        newErrors.username = "Логин должен содержать минимум 3 символа";
+        newErrors.username = 'Логин должен содержать минимум 3 символа';
       }
 
       // Если есть ошибки — сохраняем их и выходим
@@ -51,12 +52,12 @@ export const Registration = () => {
 
       try {
         await sandingDate(formData).unwrap();
-        navigate("/login");
+        navigate('/login');
       } catch (err) {
-        console.error("Registration failed:", err);
+        console.error('Registration failed:', err);
       }
     },
-    [sandingDate, navigate, formData],
+    [sandingDate, navigate, formData]
   );
 
   const handleChange = (e) => {
@@ -111,7 +112,7 @@ export const Registration = () => {
             )}
             {isError && (
               <S.StyledError>
-                Ошибка входа: {error?.data?.message || "Неверные данные"}
+                Ошибка входа: {error?.data?.message || 'Неверные данные'}
               </S.StyledError>
             )}
             <S.StyledModalBtnSignupEnt

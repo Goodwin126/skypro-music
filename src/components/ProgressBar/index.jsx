@@ -1,38 +1,44 @@
 import * as S from "./styles";
 
 export default function ProgressBar({ audio, currentTime }) {
-  // Функция форматирования времени (сек → MM:SS)
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
-  if (!audio) {
-    return null;
+  // Если нет аудио или у него нет длительности — выходим (или рендерим только время 0:00 / 0:00)
+  if (!audio || !audio.duration || audio.duration === Infinity) {
+    return (
+      <S.StyledTime>
+        <S.StyledAllTime>{formatTime(0)}</S.StyledAllTime>
+        <span>/</span>
+        <S.StyledCurrentTime>{formatTime(0)}</S.StyledCurrentTime>
+      </S.StyledTime>
+    );
   }
 
-  const duration = audio.duration || 0;
+  const duration = audio.duration;
+  const progress = (currentTime / duration) * 100;
 
-  // Прогресс в процентах
-  const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
-
-  // Обработчик изменения слайдера
   const handleChange = (e) => {
     const percent = parseFloat(e.target.value);
-    const newTime = (audio.duration * percent) / 100;
+    const newTime = (duration * percent) / 100;
     audio.currentTime = newTime;
   };
 
-  // Обработчик клика по треку (альтернативный способ перемотки)
   const handleMouseClick = (e) => {
-    if (!audio.duration) return; // Защита от неопределённой длительности
+    if (!duration) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const percent = (x / rect.width) * 100;
-    const newTime = (audio.duration * percent) / 100;
-    audio.currentTime = newTime;
+    const newTime = (duration * percent) / 100;
+    
+    // Защита от NaN
+    if (!isNaN(newTime)) {
+      audio.currentTime = newTime;
+    }
   };
 
   return (
@@ -42,6 +48,8 @@ export default function ProgressBar({ audio, currentTime }) {
         <span>/</span>
         <S.StyledCurrentTime>{formatTime(currentTime)}</S.StyledCurrentTime>
       </S.StyledTime>
+      
+      {/* Рендерим слайдер только если есть валидное аудио */}
       <S.StyledProgressInput
         type="range"
         min="0"

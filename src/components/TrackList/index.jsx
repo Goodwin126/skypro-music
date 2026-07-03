@@ -1,122 +1,128 @@
-import * as S from "./styles";
-import React, { useState } from "react";
+import * as S from './styles';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 
-import PlaylistItem from "../PlaylistItem";
-import SkeletonItem from "../SkeletonItem";
-import SearchByMenu from "../SearchByMenu";
+import PlaylistItem from '../PlaylistItem';
+import SkeletonItem from '../SkeletonItem';
+import SearchByMenu from '../SearchByMenu';
 
-import { useSelector, useDispatch } from "react-redux";
+// Импорт контекста авторизации
+import { useAuth } from '../../context/AuthContext';
+
 import {
-  setTrackPlaying,
-  setIsPlaying,
-  setTrackLike,
-  setIsMyTracks,
-} from "../../store/trackSlice";
+  toggleTrackLike,
+  addTrackToFavorite,
+  removeTrackFromFavorite,
+  setTrackPlayingId,
+  setCurrentPlaylist,
+} from '../../store/trackSlice';
 
 export default function TrackList() {
+  const { user } = useAuth();
   const [selectedGenre, setSelectedGenre] = useState([]);
   const [directionTime, setDirectionTime] = useState(null);
-  const [searchByName, setSearchByName] = useState("");
+  const [searchByName, setSearchByName] = useState('');
 
   const dispatch = useDispatch();
 
-  const { tracks, isLoading, isMyTracks } = useSelector(
-    (state) => state.storage,
+  const { tracks, isLoading } = useSelector((state) => state.storage);
+  const { currentTrackId, isPlaying } = useSelector(
+    (state) => state.storage.track
   );
 
-  const { trackPlaying, isPlaying } = useSelector(
-    (state) => state.storage.track,
-  );
-
-  const handleTrackClick = (trackName) => {
-    handleStateMyTracks();
-    if (trackPlaying === trackName) {
-      if (isPlaying) {
-        dispatch(setIsPlaying(false));
-      } else {
-        dispatch(setIsPlaying(true));
+  const handleTrackClick = (trackId) => {
+    dispatch(setTrackPlayingId({ trackId }));
+  };
+  const handleLike = useCallback(
+    async (trackId, currentLikeStatus) => {
+      // 1. Проверка: если нет юзера -> стоп
+      if (!user) {
+        return;
       }
-    } else {
-      dispatch(setTrackPlaying({ trackName }));
-      dispatch(setIsPlaying(true));
-    }
-  };
 
-  const handleStateMyTracks = () => {
-    if (!isMyTracks) {
-      dispatch(setIsMyTracks(true));
-    }
-  };
+      // 2. Локальное переключение (UI сразу реагирует)
+      dispatch(toggleTrackLike({ trackId }));
 
-  const handleClickLike = (trackName) => {
-    dispatch(setTrackLike({ trackName }));
-  };
+      try {
+        // 3. Запрос на сервер (используем СТАТУС ДО клика)
+        if (!currentLikeStatus) {
+          await dispatch(addTrackToFavorite({ trackId })).unwrap();
+        } else {
+          await dispatch(removeTrackFromFavorite({ trackId })).unwrap();
+        }
+      } catch (error) {
+        console.error('Ошибка синхронизации лайка:', error);
+        dispatch(toggleTrackLike({ trackId }));
+      }
+    },
+    [user, dispatch]
+  );
 
   const filteredTracks = React.useMemo(() => {
-    // Начинаем с полного массива треков
     let result = tracks;
 
-    // Фильтрация по поиску (ищем в названии трека, авторе и альбоме)
+    // Фильтрация по поиску
     if (searchByName) {
       const searchLower = searchByName.toLowerCase();
       result = result.filter((track) => {
         const titleMatch =
-          track.trackTitle?.toLowerCase().includes(searchLower) || false;
+          track.name?.toLowerCase().includes(searchLower) || false;
         const authorMatch =
-          track.trackAuthor?.toLowerCase().includes(searchLower) || false;
+          track.author?.toLowerCase().includes(searchLower) || false;
         const albumMatch =
-          track.trackAlbum?.toLowerCase().includes(searchLower) || false;
+          track.album?.toLowerCase().includes(searchLower) || false;
 
-        // Возвращаем true, если хотя бы одно поле содержит поисковую строку
         return titleMatch || authorMatch || albumMatch;
       });
     }
 
-    // Фильтрация по жанрам (если жанры выбраны)
+    // Фильтрация по жанрам
     if (selectedGenre.length > 0) {
       result = result.filter((track) =>
-        selectedGenre.some(
-          (genre) =>
-            track.trackGenre?.toLowerCase() === genre.value.toLowerCase(),
-        ),
+        selectedGenre.some((filterItem) => {
+          const filterVal = String(filterItem.value).toLowerCase();
+          return track.genre?.some(
+            (g) => String(g).toLowerCase() === filterVal
+          );
+        })
       );
     }
 
-    // Если directionTime null — возвращаем результат фильтрации без сортировки
-    if (directionTime === null) {
+    if (directionTime === null || directionTime === 1) {
       return result;
     }
 
-    // Сортируем в зависимости от значения directionTime
     switch (directionTime) {
-      case 1: // По умолчанию (без сортировки, сохраняем текущий порядок)
-        return result;
-
-      case 2: // Сначала новые (по году: от большего к меньшему)
+      case 2: // Сначала новые
         return [...result].sort((a, b) => {
-          const yearA = parseInt(a.trackYear, 10) || 0;
-          const yearB = parseInt(b.trackYear, 10) || 0;
-          return yearB - yearA;
+          const dateA = a.release_date || '';
+          const dateB = b.release_date || '';
+          if (dateA > dateB) return -1;
+          if (dateA < dateB) return 1;
+          return 0;
         });
 
-      case 3: // Сначала старые (по году: от меньшего к большему)
+      case 3: // Сначала старые
         return [...result].sort((a, b) => {
-          const yearA = parseInt(a.trackYear, 10) || 0;
-          const yearB = parseInt(b.trackYear, 10) || 0;
-          return yearA - yearB;
+          const dateA = a.release_date || '';
+          const dateB = b.release_date || '';
+          if (dateA < dateB) return -1;
+          if (dateA > dateB) return 1;
+          return 0;
         });
 
       default:
-        // На всякий случай — если придёт некорректное значение
         return result;
     }
-  }, [tracks, selectedGenre, directionTime, searchByName]); // Зависимости: tracks, selectedGenre, directionTime и searchByName
+  }, [tracks, selectedGenre, directionTime, searchByName]);
+
+  useEffect(() => {
+    dispatch(setCurrentPlaylist(filteredTracks));
+  }, [filteredTracks, dispatch]);
 
   const AuthorsTracks = React.useMemo(() => {
     const authorsSet = new Set(
-      tracks
-        .map((track) => track.trackAuthor)
-        .filter((author) => author != null),
+      tracks.map((track) => track.author).filter((author) => author != null)
     );
     return [...authorsSet].sort();
   }, [tracks]);
@@ -135,7 +141,9 @@ export default function TrackList() {
           onChange={(e) => setSearchByName(e.target.value)}
         />
       </S.StyledCenterblockSearch>
+
       <S.StyledCenterblockH2>Треки</S.StyledCenterblockH2>
+
       <SearchByMenu
         setSelectedGenre={setSelectedGenre}
         selectedGenre={selectedGenre}
@@ -161,27 +169,30 @@ export default function TrackList() {
             ? Array.from({ length: 8 }).map((_, index) => (
                 <SkeletonItem key={index} />
               ))
-            : filteredTracks.map((track, index) => (
-                <PlaylistItem
-                  key={index}
-                  trackName={track.trackName}
-                  trackTitle={track.trackTitle}
-                  trackSpanContent={track.trackSpanContent}
-                  trackAuthor={track.trackAuthor}
-                  trackAlbum={track.trackAlbum}
-                  trackTime={track.trackTime}
-                  sprite={
-                    track.trackName === trackPlaying
-                      ? "current-track-play"
-                      : "/img/icon/sprite.svg#icon-note"
-                  }
-                  trackLike={track.trackLike}
-                  animate={track.trackName === trackPlaying}
-                  isPlaying={isPlaying}
-                  onClickPlay={() => handleTrackClick(track.trackName)}
-                  onClickLike={() => handleClickLike(track.trackName)}
-                />
-              ))}
+            : filteredTracks.map((track) => {
+                const isLiked = track.trackLike || false;
+                return (
+                  <PlaylistItem
+                    key={track._id}
+                    trackName={track.name}
+                    trackTitle={track.author}
+                    trackSpanContent={track.trackSpanContent}
+                    trackAuthor={track.author}
+                    trackAlbum={track.album}
+                    trackTime={track.duration_in_seconds}
+                    sprite={
+                      track._id === currentTrackId
+                        ? 'current-track-play'
+                        : '/img/icon/sprite.svg#icon-note'
+                    }
+                    trackLike={track.trackLike}
+                    animate={track._id === currentTrackId}
+                    isPlaying={isPlaying}
+                    onClickPlay={() => handleTrackClick(track._id)}
+                    onClickLike={() => handleLike(track._id, isLiked)}
+                  />
+                );
+              })}
         </S.StyledContentPlaylist>
       </S.StyledCenterblockContent>
     </S.StyledMainCenterblock>

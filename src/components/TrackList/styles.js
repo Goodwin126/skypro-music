@@ -1,11 +1,15 @@
 import { styled } from "styled-components";
 
 export const StyledMainCenterblock = styled.div`
-  width: auto;
+  width: 100%;
   flex-grow: 3;
-  padding: 20px 40px 20px 111px;
+  
+  /* БЫЛО: padding: 20px 40px 20px 111px; (создавало отступы по бокам) */
+  /* СТАЛО: оставляем только вертикальные отступы и отступ слева, если он нужен для текста */
+  padding: 40px 0 20px 111px; 
+  
+  box-sizing: border-box;
 `;
-
 export const StyledCenterblockSearch = styled.div`
   width: 100%;
   border-bottom: 1px solid #4e4e4e;
@@ -102,5 +106,12 @@ export const StyledplaylistTitleSvg = styled.svg`
 export const StyledContentPlaylist = styled.div`
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  width: 100%;
+  
+  /* Убираем overflow отсюда, если скролл уже есть у родителя (ContentWrapper в App.js) */
+  /* Но если список очень длинный и нужно скроллить именно этот блок внутри страницы: */
+  overflow-y: auto; 
+  
+  /* Если скролл есть у ContentWrapper в App.js, то эта строка может быть лишней, 
+     но она не навредит. Главное - не оставлять overflow: hidden. */
 `;

@@ -1,61 +1,100 @@
-import * as S from "../TrackList/styles";
-import React from "react";
-import { useParams } from "react-router-dom";
+import React, { useMemo, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
 
-import PlaylistItem from "../PlaylistItem";
-import SkeletonItem from "../SkeletonItem";
-
-import { useSelector, useDispatch } from "react-redux";
 import {
-  setTrackPlaying,
-  setIsPlaying,
-  setTrackLike,
-  setIsMyTracks,
-} from "../../store/trackSlice";
+  setTrackPlayingId,
+  setCurrentPlaylist,
+  toggleTrackLike,
+  addTrackToFavorite,
+  removeTrackFromFavorite,
+} from '../../store/trackSlice';
+
+import { useAuth } from '../../context/AuthContext';
+import PlaylistItem from '../PlaylistItem';
+import SkeletonItem from '../SkeletonItem';
+import * as S from '../TrackList/styles';
 
 export default function GenrePlayList() {
   const dispatch = useDispatch();
+  const { user } = useAuth();
 
-  const { tracks, isLoading, isMyTracks } = useSelector(
-    (state) => state.storage,
+  const { tracks, isLoading } = useSelector((state) => state.storage);
+  const { currentTrackId, isPlaying } = useSelector(
+    (state) => state.storage.track
   );
 
-  const { trackPlaying, isPlaying } = useSelector(
-    (state) => state.storage.track,
-  );
-
-  const handleTrackClick = (trackName) => {
-    dispatch(setTrackPlaying({ trackName }));
-    dispatch(setIsPlaying(true));
-
-    if (isMyTracks === false) {
-      dispatch(setIsMyTracks(true));
-    }
-  };
-
-  const handleClickLike = (trackName) => {
-    dispatch(setTrackLike({ trackName }));
+  // Логика клика по треку (плей)
+  const handleTrackClick = (trackId) => {
+    dispatch(setTrackPlayingId({ trackId }));
   };
 
   // Получаем id из URL
   const { id: genreId } = useParams();
 
-  // Сопоставление genreId с именами свойств треков
+  // Карта жанров
   const genreToPropertyMap = {
-    "Плейлист дня": "trackPlaylistDay",
-    "100 танцевальных хитов": "track100DanceTrack",
-    "Инди-заряд": "trackIndieCharge",
+    'Плейлист дня': 'trackPlaylistDay',
+    '100 танцевальных хитов': 'track100DanceTrack',
+    'Инди-заряд': 'trackIndieCharge',
   };
 
-  // Получаем имя свойства для фильтрации
   const propertyName = genreToPropertyMap[genreId];
 
-  // Фильтруем треки: оставляем только те, у которых соответствующее свойство равно true
-  const filteredTracks = React.useMemo(() => {
+  const filteredTracks = useMemo(() => {
     if (!propertyName) return [];
 
-    return tracks.filter((track) => track[propertyName] === true);
+    if (propertyName === 'trackPlaylistDay') {
+      const shuffled = [...tracks].sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, 10);
+    }
+
+    if (propertyName === 'track100DanceTrack') {
+      return [...tracks].sort((a, b) => {
+        const countA = Array.isArray(a.staredUser) ? a.staredUser.length : 0;
+        const countB = Array.isArray(b.staredUser) ? b.staredUser.length : 0;
+        return countB - countA;
+      });
+    }
+
+    if (propertyName === 'trackIndieCharge') {
+      const searchTerm = 'электронная музыка';
+      return tracks.filter((track) =>
+        track.genre?.some((g) => g.toLowerCase().includes(searchTerm))
+      );
+    }
+
+    return [];
   }, [tracks, propertyName]);
+
+  React.useEffect(() => {
+    dispatch(setCurrentPlaylist(filteredTracks));
+  }, [filteredTracks, dispatch]);
+
+  const handleLike = useCallback(
+    async (trackId, currentLikeStatus) => {
+      // 1. Проверка: если нет юзера -> стоп
+      if (!user) {
+        return;
+      }
+
+      // 2. Локальное переключение (UI сразу реагирует)
+      dispatch(toggleTrackLike({ trackId }));
+
+      try {
+        // 3. Запрос на сервер (используем СТАТУС ДО клика)
+        if (!currentLikeStatus) {
+          await dispatch(addTrackToFavorite({ trackId })).unwrap();
+        } else {
+          await dispatch(removeTrackFromFavorite({ trackId })).unwrap();
+        }
+      } catch (error) {
+        console.error('Ошибка синхронизации лайка:', error);
+        dispatch(toggleTrackLike({ trackId }));
+      }
+    },
+    [user, dispatch]
+  );
 
   return (
     <S.StyledMainCenterblock>
@@ -65,6 +104,7 @@ export default function GenrePlayList() {
         </S.StyledSearchSvg>
         <S.StyledSearchText type="search" placeholder="Поиск" name="search" />
       </S.StyledCenterblockSearch>
+
       <S.StyledCenterblockH2>{genreId}</S.StyledCenterblockH2>
 
       <S.StyledCenterblockContent>
@@ -78,32 +118,40 @@ export default function GenrePlayList() {
             </S.StyledplaylistTitleSvg>
           </S.StyledCol04>
         </S.StyledContentTitle>
+
         <S.StyledContentPlaylist>
           {isLoading
             ? Array.from({ length: 8 }).map((_, index) => (
                 <SkeletonItem key={index} />
               ))
-            : filteredTracks.map((track, index) => (
-                <PlaylistItem
-                  key={index}
-                  trackName={track.trackName}
-                  trackTitle={track.trackTitle}
-                  trackSpanContent={track.trackSpanContent}
-                  trackAuthor={track.trackAuthor}
-                  trackAlbum={track.trackAlbum}
-                  trackTime={track.trackTime}
-                  sprite={
-                    track.trackName === trackPlaying
-                      ? "current-track-play"
-                      : "/img/icon/sprite.svg#icon-note"
-                  }
-                  trackLike={track.trackLike}
-                  animate={track.trackName === trackPlaying}
-                  isPlaying={isPlaying}
-                  onClickPlay={() => handleTrackClick(track.trackName)}
-                  onClickLike={() => handleClickLike(track.trackName)}
-                />
-              ))}
+            : filteredTracks.map((track) => {
+                const isLiked = track.trackLike || false;
+
+                return (
+                  <PlaylistItem
+                    key={track._id}
+                    trackName={track.name}
+                    trackTitle={track.author}
+                    trackSpanContent={track.trackSpanContent}
+                    trackAuthor={track.author}
+                    trackAlbum={track.album}
+                    trackTime={track.duration_in_seconds}
+                    sprite={
+                      track._id === currentTrackId
+                        ? 'current-track-play'
+                        : '/img/icon/sprite.svg#icon-note'
+                    }
+                    trackLike={isLiked}
+                    animate={track._id === currentTrackId}
+                    isPlaying={isPlaying}
+                    onClickPlay={() => handleTrackClick(track._id)}
+
+                    onClickLike={() => handleLike(track._id, isLiked)}
+
+                    isAuthorized={!!user}
+                  />
+                );
+              })}
         </S.StyledContentPlaylist>
       </S.StyledCenterblockContent>
     </S.StyledMainCenterblock>

@@ -1,15 +1,15 @@
-import * as S from "./styles";
-import SideBarPersonal from "../sideBarPersonal";
-import SidebarItem from "../SidebarItem";
-import SidbarSkeliton from "../SkelitonSidebar";
+import React from 'react';
+import * as S from './styles';
+import SideBarPersonal from '../sideBarPersonal';
+import SidebarItem from '../SidebarItem';
+import SidbarSkeliton from '../SkelitonSidebar';
 
-export default function Sidebar({ isLoading, onAuthButtonClick }) {
+// ❌ УБРАЛИ onAuthButtonClick из аргументов
+export default function Sidebar({ isLoading }) {
   return (
     <S.StyledMainSidebar role="region" aria-label="Main sidebar">
-      <SideBarPersonal
-        sprite="/img/icon/sprite.svg"
-        onAuthButtonClick={onAuthButtonClick}
-      />
+      {/* ❌ УБРАЛИ передачу onAuthButtonClick сюда */}
+      <SideBarPersonal sprite="/img/icon/sprite.svg" />
 
       <S.StyledSidebarBlock role="region" aria-label="sidebar block">
         <S.StyledSidebarList>

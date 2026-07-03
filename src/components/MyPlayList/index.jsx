@@ -1,40 +1,56 @@
-import * as S from "../TrackList/styles";
-import React from "react";
+import * as S from '../TrackList/styles';
+import React, { useCallback } from 'react';
+import PlaylistItem from '../PlaylistItem';
+import SkeletonItem from '../SkeletonItem';
 
-import PlaylistItem from "../PlaylistItem";
-import SkeletonItem from "../SkeletonItem";
-
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector, useDispatch } from 'react-redux';
 import {
-  setTrackPlaying,
-  setIsPlaying,
-  setTrackLike,
-  setIsMyTracks,
-} from "../../store/trackSlice";
+  toggleTrackLike,
+  addTrackToFavorite,
+  removeTrackFromFavorite,
+  setPlaylistFromFavorites,
+} from '../../store/trackSlice';
+
+import { useAuth } from '../../context/AuthContext';
 
 export default function MyPlayList() {
   const dispatch = useDispatch();
+  const { user } = useAuth();
 
-  const { tracks, isLoading, isMyTracks } = useSelector(
-    (state) => state.storage,
+  const { tracks, isLoading } = useSelector((state) => state.storage);
+  const { currentTrackId, isPlaying } = useSelector(
+    (state) => state.storage.track
   );
 
-  const { trackPlaying, isPlaying } = useSelector(
-    (state) => state.storage.track,
+  // Фильтруем только избранные треки
+  const favoriteTracks = tracks.filter((track) => track.trackLike === true);
+
+  const handleTrackClick = (trackId) => {
+    dispatch(setPlaylistFromFavorites({ trackId }));
+  };
+
+  const handleTrackClickLike = useCallback(
+    async (trackId, currentLikeStatus) => {
+      if (!user) {
+        return;
+      }
+
+      dispatch(toggleTrackLike({ trackId }));
+
+      try {
+        if (!currentLikeStatus) {
+          await dispatch(addTrackToFavorite({ trackId })).unwrap();
+        } else {
+          await dispatch(removeTrackFromFavorite({ trackId })).unwrap();
+        }
+      } catch (error) {
+        console.error('Ошибка синхронизации лайка:', error);
+
+        dispatch(toggleTrackLike({ trackId }));
+      }
+    },
+    [user, dispatch]
   );
-
-  const handleTrackClick = (trackName) => {
-    dispatch(setTrackPlaying({ trackName }));
-    dispatch(setIsPlaying(true));
-
-    if (isMyTracks === false) {
-      dispatch(setIsMyTracks(true));
-    }
-  };
-
-  const handelClickLike = (trackName) => {
-    dispatch(setTrackLike({ trackName }));
-  };
 
   return (
     <S.StyledMainCenterblock>
@@ -44,6 +60,7 @@ export default function MyPlayList() {
         </S.StyledSearchSvg>
         <S.StyledSearchText type="search" placeholder="Поиск" name="search" />
       </S.StyledCenterblockSearch>
+
       <S.StyledCenterblockH2>Мои треки</S.StyledCenterblockH2>
 
       <S.StyledCenterblockContent>
@@ -57,34 +74,45 @@ export default function MyPlayList() {
             </S.StyledplaylistTitleSvg>
           </S.StyledCol04>
         </S.StyledContentTitle>
+
         <S.StyledContentPlaylist>
-          {isLoading
-            ? Array.from({ length: 8 }).map((_, index) => (
-                <SkeletonItem key={index} />
-              ))
-            : tracks.map((track, index) =>
-                track.trackLike ? (
-                  <PlaylistItem
-                    key={index}
-                    trackName={track.trackName}
-                    trackTitle={track.trackTitle}
-                    trackSpanContent={track.trackSpanContent}
-                    trackAuthor={track.trackAuthor}
-                    trackAlbum={track.trackAlbum}
-                    trackTime={track.trackTime}
-                    sprite={
-                      track.trackName === trackPlaying
-                        ? "current-track-play"
-                        : "/img/icon/sprite.svg#icon-note"
-                    }
-                    trackLike={track.trackLike}
-                    animate={track.trackName === trackPlaying}
-                    isPlaying={isPlaying}
-                    onClickPlay={() => handleTrackClick(track.trackName)}
-                    onClickLike={() => handelClickLike(track.trackName)}
-                  />
-                ) : null,
-              )}
+          {isLoading ? (
+            Array.from({ length: 8 }).map((_, index) => (
+              <SkeletonItem key={index} />
+            ))
+          ) : favoriteTracks.length === 0 ? (
+            <div
+              style={{ padding: '20px', color: '#888', textAlign: 'center' }}
+            >
+              У вас пока нет избранных треков. Нажмите на сердечко, чтобы
+              добавить!
+            </div>
+          ) : (
+            favoriteTracks.map((track) => {
+              const isLiked = track.trackLike || false;
+
+              return (
+                <PlaylistItem
+                  key={track._id}
+                  trackName={track.name}
+                  trackAuthor={track.author}
+                  trackAlbum={track.album}
+                  trackTime={track.duration_in_seconds}
+                  trackLike={isLiked}
+                  sprite={
+                    track._id === currentTrackId
+                      ? 'current-track-play'
+                      : '/img/icon/sprite.svg#icon-note'
+                  }
+                  animate={track._id === currentTrackId}
+                  isPlaying={isPlaying}
+                  onClickPlay={() => handleTrackClick(track._id)}
+                  onClickLike={() => handleTrackClickLike(track._id, isLiked)}
+                  isAuthorized={!!user}
+                />
+              );
+            })
+          )}
         </S.StyledContentPlaylist>
       </S.StyledCenterblockContent>
     </S.StyledMainCenterblock>

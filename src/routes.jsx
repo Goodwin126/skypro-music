@@ -1,11 +1,11 @@
-import { Routes, Route } from "react-router-dom";
-import { ProtectedRoute } from "./components/protected-route";
-import { Main } from "./pages/main";
-import { Login } from "./pages/login";
-import { Collections } from "./pages/collections";
-import { MyPlaylist } from "./pages/my-playlist";
-import { Registration } from "./pages/registration";
-import { NotFound } from "./pages/not-found";
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { Main } from './pages/main';
+import { Login } from './pages/login';
+import { Collections } from './pages/collections';
+import { MyPlaylist } from './pages/my-playlist';
+import { Registration } from './pages/registration';
+import { NotFound } from './pages/not-found';
 
 export const AppRoutes = ({ user, onAuthButtonClick }) => {
   return (
@@ -13,43 +13,26 @@ export const AppRoutes = ({ user, onAuthButtonClick }) => {
       <Route
         path="/login"
         element={<Login user={user} onAuthButtonClick={onAuthButtonClick} />}
-      ></Route>
-      <Route path="/registration" element={<Registration />}></Route>
+      />
 
+      <Route path="/registration" element={<Registration />} />
       <Route
         path="/collections/:id"
-        element={
-          <ProtectedRoute isAllowed={Boolean(user)}>
-            <Collections onAuthButtonClick={onAuthButtonClick} />
-          </ProtectedRoute>
-        }
-      ></Route>
+        element={<Collections onAuthButtonClick={onAuthButtonClick} />}
+      />
 
       <Route
         path="/my-playlist"
-        element={
-          <ProtectedRoute isAllowed={Boolean(user)}>
-            <MyPlaylist onAuthButtonClick={onAuthButtonClick} />
-          </ProtectedRoute>
-        }
-      ></Route>
+        element={<MyPlaylist onAuthButtonClick={onAuthButtonClick} />}
+      />
+
+      {/* 🔥 Для главной и 404 тоже убираем защиту */}
+      <Route path="/*" element={<NotFound />} />
 
       <Route
-        path="/*"
-        element={
-          <ProtectedRoute isAllowed={Boolean(user)}>
-            <NotFound />
-          </ProtectedRoute>
-        }
-      ></Route>
-      <Route
         path="/"
-        element={
-          <ProtectedRoute isAllowed={Boolean(user)}>
-            <Main onAuthButtonClick={onAuthButtonClick} />
-          </ProtectedRoute>
-        }
-      ></Route>
+        element={<Main onAuthButtonClick={onAuthButtonClick} />}
+      />
     </Routes>
   );
 };

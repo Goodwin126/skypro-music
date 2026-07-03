@@ -13,7 +13,6 @@ export const Collections = (onAuthButtonClick) => {
         Sidebar={Sidebar}
       />
 
-      <h1> Collection № {params.id}</h1>
     </div>
   );
 };

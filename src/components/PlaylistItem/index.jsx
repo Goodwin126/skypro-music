@@ -1,5 +1,6 @@
-import * as S from "./styles";
-import { styled, keyframes, css } from "styled-components";
+import React from 'react';
+import * as S from './styles';
+import { styled, keyframes, css } from 'styled-components';
 
 export const pulseAnimation = keyframes`
   0% {
@@ -30,13 +31,13 @@ export const StyledAnimatedSvg = styled.svg`
     props.$animate &&
     css`
       animation: ${pulseAnimation} 0.7s infinite;
-      animation-play-state: ${props.$isPlaying ? "running" : "paused"};
+      animation-play-state: ${props.$isPlaying ? 'running' : 'paused'};
       will-change: transform, opacity;
     `}
 `;
 
 export default function PlaylistItem({
-  trackTitle,
+  trackName,
   trackAuthor,
   trackAlbum,
   trackTime,
@@ -48,6 +49,17 @@ export default function PlaylistItem({
   onClickPlay,
   onClickLike,
 }) {
+  const formatTime = (seconds) => {
+    if (typeof seconds !== 'number' || seconds < 0) return '0:00';
+
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+
+    // Добавляем ведущий ноль для секунд, если они меньше 10
+    const formattedSecs = secs < 10 ? `0${secs}` : `${secs}`;
+
+    return `${minutes}:${formattedSecs}`;
+  };
   return (
     <S.StyledPlaylistItem>
       <S.StyledPlaylistTrack>
@@ -55,7 +67,7 @@ export default function PlaylistItem({
           <S.StyledTrackTitleImage>
             <S.StyledTrackTitleSvg aria-label="Иконка трека">
               <StyledAnimatedSvg $animate={animate} $isPlaying={isPlaying}>
-                {sprite === "current-track-play" ? (
+                {sprite === 'current-track-play' ? (
                   <svg
                     width="16"
                     height="16"
@@ -78,7 +90,7 @@ export default function PlaylistItem({
           </S.StyledTrackTitleImage>
           <S.StyledTrackTitleText>
             <S.StyledTrackTitleLink onClick={onClickPlay}>
-              {trackTitle}
+              {trackName}
               <S.StyledTrackTitleSpan>
                 {trackSpanContent}
               </S.StyledTrackTitleSpan>
@@ -101,7 +113,7 @@ export default function PlaylistItem({
               <use href="/img/icon/sprite.svg#icon-like" />
             )}
           </S.StyledTrackTimeSvg>
-          <S.StyledtrackTimeText>{trackTime}</S.StyledtrackTimeText>
+          <S.StyledtrackTimeText>{formatTime(trackTime)}</S.StyledtrackTimeText>
         </S.StyledTrackTime>
       </S.StyledPlaylistTrack>
     </S.StyledPlaylistItem>

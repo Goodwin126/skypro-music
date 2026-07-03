@@ -4,10 +4,10 @@ import * as S from "./styles";
 const listTimes = ["По умолчанию", "Сначала новые", "Сначала старые"];
 
 const listGenre = [
-  { name: "Рок", value: "Rock" },
-  { name: "Хип-хоп", value: "Hip-hop" },
+  { name: "Рок", value: "Рок музыка" },
+  { name: "Классика", value: "Классическая музыка" },
   { name: "Поп-музыка", value: "Pop" },
-  { name: "Техно", value: "Techno" },
+  { name: "Техно", value: "Электронная музыка" },
   { name: "Инди", value: "Indie" },
 ];
 

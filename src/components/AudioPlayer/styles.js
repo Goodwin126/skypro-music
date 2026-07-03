@@ -1,11 +1,26 @@
-import styled from "styled-components";
+import styled from 'styled-components';
 
 export const StyledBar = styled.div`
-  position: absolute;
+  width: 100%;
+  height: 80px; /* Высота должна совпадать с отступом в App.js */
+
+  /* --- ГЛАВНОЕ ИЗМЕНЕНИЕ: УБРАЛИ background-color --- */
+  /* Теперь фон полностью прозрачный, видно всё, что было под плеером */
+
+  position: fixed;
   bottom: 0;
   left: 0;
-  width: 100%;
-  background: rgba(28, 28, 28, 0.5);
+  z-index: 1000;
+  flex-shrink: 0;
+
+  /* ВАЖНО: Тонкая линия сверху, чтобы плеер не сливался со списком треков */
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  background-color: rgba(56, 56, 56, 0.3); /* Темно-серый с прозрачностью 70% */
+  backdrop-filter: blur(
+    4px
+  ); /* Лёгкое размытие фона под плеером (эффект матового стекла) */
+  /* Опционально: лёгкая тень сверху, чтобы создать эффект "парения" */
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
 `;
 
 export const StyledBarContent = styled.div`
@@ -55,7 +70,7 @@ export const StyledPlayerBtnPlay = styled(StyledBtn)`
   display: flex;
   align-items: center;
   margin-right: 23px;
-  cursor: ${({ disabled }) => (disabled ? "not-allowed" : "pointer")};
+  cursor: ${({ disabled }) => (disabled ? 'not-allowed' : 'pointer')};
   opacity: ${({ disabled }) => (disabled ? 0.5 : 1)};
 `;
 
@@ -124,7 +139,7 @@ export const StyledTrackPlayLikeDis = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin-left: 26%;
+  margin-left: 10%;
 `;
 
 export const StyledTrackPlayLike = styled(StyledBtnIcon)`
