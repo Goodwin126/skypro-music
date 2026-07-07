@@ -1,10 +1,11 @@
-import * as S from "./styles";
+import React from 'react';
+import * as S from './styles';
 
 export default function ProgressBar({ audio, currentTime }) {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
   // Если нет аудио или у него нет длительности — выходим (или рендерим только время 0:00 / 0:00)
@@ -34,7 +35,7 @@ export default function ProgressBar({ audio, currentTime }) {
     const x = e.clientX - rect.left;
     const percent = (x / rect.width) * 100;
     const newTime = (duration * percent) / 100;
-    
+
     // Защита от NaN
     if (!isNaN(newTime)) {
       audio.currentTime = newTime;
@@ -48,7 +49,7 @@ export default function ProgressBar({ audio, currentTime }) {
         <span>/</span>
         <S.StyledCurrentTime>{formatTime(currentTime)}</S.StyledCurrentTime>
       </S.StyledTime>
-      
+
       {/* Рендерим слайдер только если есть валидное аудио */}
       <S.StyledProgressInput
         type="range"

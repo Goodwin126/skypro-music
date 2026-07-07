@@ -19,7 +19,10 @@ export default function GenrePlayList() {
   const dispatch = useDispatch();
   const { user } = useAuth();
 
-  const { tracks, isLoading } = useSelector((state) => state.storage);
+  const { tracks, tracksSelection, isLoading } = useSelector(
+    (state) => state.storage
+  );
+
   const { currentTrackId, isPlaying } = useSelector(
     (state) => state.storage.track
   );
@@ -32,40 +35,36 @@ export default function GenrePlayList() {
   // Получаем id из URL
   const { id: genreId } = useParams();
 
-  // Карта жанров
-  const genreToPropertyMap = {
-    'Плейлист дня': 'trackPlaylistDay',
-    '100 танцевальных хитов': 'track100DanceTrack',
-    'Инди-заряд': 'trackIndieCharge',
-  };
-
-  const propertyName = genreToPropertyMap[genreId];
+  const titlePage = useMemo(() => {
+    if (genreId === '2') {
+      return 'Плейлист дня';
+    }
+    if (genreId === '3') {
+      return '100 танцевальных хитов';
+    }
+    if (genreId === '4') {
+      return 'Инди-заряд';
+    }
+  }, [genreId]);
 
   const filteredTracks = useMemo(() => {
-    if (!propertyName) return [];
+    const list_Id = Number(genreId);
 
-    if (propertyName === 'trackPlaylistDay') {
-      const shuffled = [...tracks].sort(() => 0.5 - Math.random());
-      return shuffled.slice(0, 10);
-    }
+    if (!genreId) return [];
 
-    if (propertyName === 'track100DanceTrack') {
-      return [...tracks].sort((a, b) => {
-        const countA = Array.isArray(a.staredUser) ? a.staredUser.length : 0;
-        const countB = Array.isArray(b.staredUser) ? b.staredUser.length : 0;
-        return countB - countA;
-      });
-    }
+    // 1. Находим объект подборки
+    const targetList = tracksSelection.find((item) => item._id === list_Id);
 
-    if (propertyName === 'trackIndieCharge') {
-      const searchTerm = 'электронная музыка';
-      return tracks.filter((track) =>
-        track.genre?.some((g) => g.toLowerCase().includes(searchTerm))
-      );
-    }
+    if (!targetList) return [];
 
-    return [];
-  }, [tracks, propertyName]);
+    // Превращаем список ID в набор строк для надежного сравнения
+    const idsList = (targetList.items || []).map((id) => String(id));
+
+    // Фильтруем большой массив tracks: оставляем только те, чей _id есть в idsList
+    return tracks.filter((track) => {
+      return idsList.includes(String(track._id));
+    });
+  }, [tracks, tracksSelection, genreId]);
 
   React.useEffect(() => {
     dispatch(setCurrentPlaylist(filteredTracks));
@@ -105,7 +104,7 @@ export default function GenrePlayList() {
         <S.StyledSearchText type="search" placeholder="Поиск" name="search" />
       </S.StyledCenterblockSearch>
 
-      <S.StyledCenterblockH2>{genreId}</S.StyledCenterblockH2>
+      <S.StyledCenterblockH2>{titlePage}</S.StyledCenterblockH2>
 
       <S.StyledCenterblockContent>
         <S.StyledContentTitle>

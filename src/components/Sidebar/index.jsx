@@ -4,11 +4,9 @@ import SideBarPersonal from '../sideBarPersonal';
 import SidebarItem from '../SidebarItem';
 import SidbarSkeliton from '../SkelitonSidebar';
 
-// ❌ УБРАЛИ onAuthButtonClick из аргументов
 export default function Sidebar({ isLoading }) {
   return (
     <S.StyledMainSidebar role="region" aria-label="Main sidebar">
-      {/* ❌ УБРАЛИ передачу onAuthButtonClick сюда */}
       <SideBarPersonal sprite="/img/icon/sprite.svg" />
 
       <S.StyledSidebarBlock role="region" aria-label="sidebar block">
@@ -17,12 +15,9 @@ export default function Sidebar({ isLoading }) {
             <SidbarSkeliton />
           ) : (
             <div>
-              <SidebarItem playlist="/img/playlist01.png" id="Плейлист дня" />
-              <SidebarItem
-                playlist="/img/playlist02.png"
-                id="100 танцевальных хитов"
-              />
-              <SidebarItem playlist="/img/playlist03.png" id="Инди-заряд" />
+              <SidebarItem playlist="/img/playlist01.png" id="2" />
+              <SidebarItem playlist="/img/playlist02.png" id="3" />
+              <SidebarItem playlist="/img/playlist03.png" id="4" />
             </div>
           )}
         </S.StyledSidebarList>

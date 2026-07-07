@@ -20,8 +20,9 @@ import {
 export default function TrackList() {
   const { user } = useAuth();
   const [selectedGenre, setSelectedGenre] = useState([]);
-  const [directionTime, setDirectionTime] = useState(null);
+  const [directionTime, setDirectionTime] = useState(1);
   const [searchByName, setSearchByName] = useState('');
+  const [searchedByNames, setsearchedByNames] = useState([]);
 
   const dispatch = useDispatch();
 
@@ -35,16 +36,9 @@ export default function TrackList() {
   };
   const handleLike = useCallback(
     async (trackId, currentLikeStatus) => {
-      // 1. Проверка: если нет юзера -> стоп
-      if (!user) {
-        return;
-      }
-
-      // 2. Локальное переключение (UI сразу реагирует)
       dispatch(toggleTrackLike({ trackId }));
 
       try {
-        // 3. Запрос на сервер (используем СТАТУС ДО клика)
         if (!currentLikeStatus) {
           await dispatch(addTrackToFavorite({ trackId })).unwrap();
         } else {
@@ -52,16 +46,19 @@ export default function TrackList() {
         }
       } catch (error) {
         console.error('Ошибка синхронизации лайка:', error);
+        // Откатываем UI, если сервер вернул ошибку
         dispatch(toggleTrackLike({ trackId }));
       }
     },
-    [user, dispatch]
+    [dispatch] // user больше не нужен в зависимостях
   );
 
   const filteredTracks = React.useMemo(() => {
-    let result = tracks;
+    // Начинаем с полного списка (или пустого, если данных нет)
+    let result = tracks || [];
 
-    // Фильтрация по поиску
+    // --- ШАГ 1: ОБЩИЙ ПОИСК (должен быть ПЕРВЫМ) ---
+    // Если пользователь что-то вбил в строку поиска, сужаем список сразу
     if (searchByName) {
       const searchLower = searchByName.toLowerCase();
       result = result.filter((track) => {
@@ -76,7 +73,7 @@ export default function TrackList() {
       });
     }
 
-    // Фильтрация по жанрам
+    // --- ШАГ 2: ФИЛЬТР ПО ЖАНРАМ ---
     if (selectedGenre.length > 0) {
       result = result.filter((track) =>
         selectedGenre.some((filterItem) => {
@@ -88,6 +85,20 @@ export default function TrackList() {
       );
     }
 
+    // --- ШАГ 3: ФИЛЬТР ПО ИСПОЛНИТЕЛЮ (из меню) ---
+    if (searchedByNames.length > 0) {
+      const normalizedAuthors = searchedByNames.map((name) =>
+        name.toLowerCase()
+      );
+
+      result = result.filter((track) => {
+        const trackAuthor = track.author?.toLowerCase();
+        // Оставляем трек, если его автор есть в списке выбранных
+        return normalizedAuthors.includes(trackAuthor);
+      });
+    }
+
+    // --- ШАГ 4: СОРТИРОВКА ---
     if (directionTime === null || directionTime === 1) {
       return result;
     }
@@ -95,26 +106,22 @@ export default function TrackList() {
     switch (directionTime) {
       case 2: // Сначала новые
         return [...result].sort((a, b) => {
-          const dateA = a.release_date || '';
-          const dateB = b.release_date || '';
-          if (dateA > dateB) return -1;
-          if (dateA < dateB) return 1;
-          return 0;
+          const dateA = new Date(a.release_date).getTime() || 0;
+          const dateB = new Date(b.release_date).getTime() || 0;
+          return dateB - dateA;
         });
 
       case 3: // Сначала старые
         return [...result].sort((a, b) => {
-          const dateA = a.release_date || '';
-          const dateB = b.release_date || '';
-          if (dateA < dateB) return -1;
-          if (dateA > dateB) return 1;
-          return 0;
+          const dateA = new Date(a.release_date).getTime() || 0;
+          const dateB = new Date(b.release_date).getTime() || 0;
+          return dateA - dateB;
         });
 
       default:
         return result;
     }
-  }, [tracks, selectedGenre, directionTime, searchByName]);
+  }, [tracks, selectedGenre, directionTime, searchByName, searchedByNames]);
 
   useEffect(() => {
     dispatch(setCurrentPlaylist(filteredTracks));
@@ -148,8 +155,11 @@ export default function TrackList() {
         setSelectedGenre={setSelectedGenre}
         selectedGenre={selectedGenre}
         setDirectionTime={setDirectionTime}
+        directionTime={directionTime}
         AuthorsTracks={AuthorsTracks}
-        setSearchByName={setSearchByName}
+        searchByName={searchByName}
+        searchedByNames={searchedByNames}
+        setsearchedByNames={setsearchedByNames}
       />
 
       <S.StyledCenterblockContent>
@@ -190,6 +200,7 @@ export default function TrackList() {
                     isPlaying={isPlaying}
                     onClickPlay={() => handleTrackClick(track._id)}
                     onClickLike={() => handleLike(track._id, isLiked)}
+                    isAuthorized={!!user}
                   />
                 );
               })}

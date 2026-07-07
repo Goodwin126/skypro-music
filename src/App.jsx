@@ -10,7 +10,7 @@ import {
 } from './components/AppLayout/styles';
 import { AppRoutes } from './routes';
 import AudioPlayer from './components/AudioPlayer';
-import { loadTracks } from './store/trackSlice';
+import { loadTracks, loadTracksSelection } from './store/trackSlice';
 
 function App() {
   const location = useLocation();
@@ -18,6 +18,14 @@ function App() {
 
   useEffect(() => {
     dispatch(loadTracks());
+  }, [dispatch]);
+
+  useEffect(() => {
+    const listSelectionId = [2, 3, 4];
+
+    listSelectionId.forEach((id) => {
+      dispatch(loadTracksSelection({ Selection_Id: id }));
+    });
   }, [dispatch]);
 
   return (

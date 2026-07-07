@@ -1,68 +1,90 @@
-import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
-import SideBarPersonal from "./index";
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import SideBarPersonal from './index';
 
-// Мок стилизованных компонентов — возвращаем простые HTML-теги
-vi.mock("./styles", () => ({
-  StyledSidebarPersonalt: "div",
-  StyledSidebarPersonalName: "div",
-  StyledSidebarIcon: "div",
+vi.mock('./styles', () => ({
+  StyledSidebarPersonalt: 'div',
+  StyledSidebarPersonalName: 'div',
+  StyledSidebarIcon: 'div',
 }));
 
-describe("SideBarPersonal", () => {
-  const mockOnAuthButtonClick = vi.fn();
-  const mockSprite = "/sprite.svg";
+let mockAuthData = { user: { username: 'Sergey.Ivanov' }, logout: vi.fn() };
 
+vi.mock('../../context/AuthContext', async () => {
+  const actual = await vi.importActual('../../context/AuthContext');
+  return {
+    ...actual,
+    useAuth: () => mockAuthData,
+  };
+});
+
+const mockSprite = '/sprite.svg';
+
+describe('SideBarPersonal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockAuthData.logout = vi.fn();
   });
 
-  it("render the component without errors", () => {
-    expect(() => {
-      render(
-        <SideBarPersonal
-          sprite={mockSprite}
-          onAuthButtonClick={mockOnAuthButtonClick}
-        />,
-      );
-    }).not.toThrow();
-  });
+  const setAuthContext = (userValue) => {
+    mockAuthData = {
+      user: userValue,
+      logout: mockAuthData.logout,
+    };
+  };
 
-  it("Display the user's name", () => {
+  const renderComponent = () => {
     render(
-      <SideBarPersonal
-        sprite={mockSprite}
-        onAuthButtonClick={mockOnAuthButtonClick}
-      />,
+      <MemoryRouter>
+        <SideBarPersonal sprite={mockSprite} />
+      </MemoryRouter>
     );
-    const userName = screen.getByText("Sergey.Ivanov");
+  };
+
+  it('рендерит компонент без ошибок при авторизованном пользователе', () => {
+    setAuthContext({ username: 'Sergey.Ivanov' });
+    expect(() => renderComponent()).not.toThrow();
+  });
+
+  it('отображает имя пользователя', () => {
+    setAuthContext({ username: 'Sergey.Ivanov' });
+    renderComponent();
+    const userName = screen.getByText('Sergey.Ivanov');
     expect(userName).toBeInTheDocument();
   });
 
-  it("display the exit icon (svg с alt='logout')", () => {
-    render(
-      <SideBarPersonal
-        sprite={mockSprite}
-        onAuthButtonClick={mockOnAuthButtonClick}
-      />,
-    );
-    const logoutIcon = screen.getByLabelText("logout");
+  it('отображает иконку выхода (svg с aria-label)', () => {
+    setAuthContext({ username: 'Sergey.Ivanov' });
+    renderComponent();
+
+    const logoutIcon = screen.getByLabelText('logout');
     expect(logoutIcon).toBeInTheDocument();
-    expect(logoutIcon.querySelector("use")).toBeInTheDocument();
-    expect(logoutIcon.querySelector("use").getAttribute("href")).toBe(
-      "/sprite.svg#logout",
-    );
+
+    const useTag = logoutIcon.querySelector('use');
+    expect(useTag).toBeInTheDocument();
+    expect(useTag.getAttribute('href')).toBe(`${mockSprite}#logout`);
   });
 
-  it("call onAuthButtonClick when the component is clicked", () => {
-    render(
-      <SideBarPersonal
-        sprite={mockSprite}
-        onAuthButtonClick={mockOnAuthButtonClick}
-      />,
-    );
-    const sidebarPersonal = screen.getByLabelText("logout");
-    fireEvent.click(sidebarPersonal);
-    expect(mockOnAuthButtonClick).toHaveBeenCalledTimes(1);
+  it('вызывает функцию logout при клике на блок (если пользователь залогинен)', () => {
+    setAuthContext({ username: 'Sergey.Ivanov' });
+    renderComponent();
+
+    const clickableElement = screen.getByText('Sergey.Ivanov').parentElement;
+    fireEvent.click(clickableElement);
+    expect(mockAuthData.logout).toHaveBeenCalledTimes(1);
+  });
+
+  it('рендерит ссылку на /login, если пользователь НЕ авторизован', () => {
+    setAuthContext(null);
+    renderComponent();
+
+    const link = screen.getByRole('link', { name: /login/i });
+    expect(link).toBeInTheDocument();
+
+    expect(link.textContent.toLowerCase()).toContain('login');
+
+    fireEvent.click(link);
+    expect(mockAuthData.logout).not.toHaveBeenCalled();
   });
 });

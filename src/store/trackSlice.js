@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 const BASE_URL = 'https://webdev-music-003b5b991590.herokuapp.com/';
 
-// Вспомогательная функция для получения токена из localStorage
 const getAuthToken = () => {
   const tokensStr = localStorage.getItem('tokens');
   if (!tokensStr) return null;
@@ -10,12 +9,14 @@ const getAuthToken = () => {
     const tokens = JSON.parse(tokensStr);
     return tokens.access;
   } catch (e) {
-    console.warn('⚠️ Не удалось распарсить токены из localStorage:', e);
+    console.warn('⚠️ Не удалось распарсить токены:', e);
     return null;
   }
 };
 
 const shuffleArray = (array) => {
+  if (!Array.isArray(array) || array.length <= 1) return array;
+
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -33,18 +34,28 @@ export const loadTracks = createAsyncThunk('tracks/loadTracks', async () => {
 
   return rawTracks.map((track) => ({
     ...track,
-    trackLike: false, // По умолчанию не лайкнуто
+    trackLike: false,
   }));
 });
+
+export const loadTracksSelection = createAsyncThunk(
+  'tracks/loadTracksSelection',
+  async ({ Selection_Id }) => {
+    const response = await fetch(
+      `${BASE_URL}catalog/selection/${Selection_Id}`
+    );
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : data.data || [];
+  }
+);
 
 export const loadFavoriteTracks = createAsyncThunk(
   'favoriteTracks/loadTracks',
   async () => {
     const token = getAuthToken();
-
-    if (!token) {
-      throw new Error('Нет токена авторизации');
-    }
+    if (!token) throw new Error('Нет токена авторизации');
 
     const response = await fetch(`${BASE_URL}catalog/track/favorite/all/`, {
       method: 'GET',
@@ -55,9 +66,7 @@ export const loadFavoriteTracks = createAsyncThunk(
     });
 
     if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error('Сессия истекла. Пожалуйста, войдите снова.');
-      }
+      if (response.status === 401) throw new Error('Сессия истекла');
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -66,12 +75,11 @@ export const loadFavoriteTracks = createAsyncThunk(
   }
 );
 
-// 2. Добавить в избранное
 export const addTrackToFavorite = createAsyncThunk(
   'tracks/addTrackToFavorite',
   async ({ trackId }) => {
     const token = getAuthToken();
-    if (!token) throw new Error('Нет токена авторизации');
+    if (!token) throw new Error('Нет токена');
 
     const response = await fetch(
       `${BASE_URL}catalog/track/${trackId}/favorite/`,
@@ -88,17 +96,15 @@ export const addTrackToFavorite = createAsyncThunk(
       if (response.status === 401) throw new Error('Сессия истекла');
       throw new Error(`Ошибка добавления: ${response.status}`);
     }
-
     return trackId;
   }
 );
 
-// 3. Удалить из избранного
 export const removeTrackFromFavorite = createAsyncThunk(
   'tracks/removeTrackFromFavorite',
   async ({ trackId }) => {
     const token = getAuthToken();
-    if (!token) throw new Error('Нет токена авторизации');
+    if (!token) throw new Error('Нет токена');
 
     const response = await fetch(
       `${BASE_URL}catalog/track/${trackId}/favorite/`,
@@ -115,7 +121,6 @@ export const removeTrackFromFavorite = createAsyncThunk(
       if (response.status === 401) throw new Error('Сессия истекла');
       throw new Error(`Ошибка удаления: ${response.status}`);
     }
-
     return trackId;
   }
 );
@@ -124,6 +129,7 @@ const tracksSlice = createSlice({
   name: 'storage',
   initialState: {
     tracks: [],
+    tracksSelection: [],
     currentPlaylist: [],
     track: {
       currentTrackId: null,
@@ -134,48 +140,37 @@ const tracksSlice = createSlice({
     error: null,
   },
   reducers: {
-    // подключаем все треки
     setTracks(state, action) {
       state.tracks = action.payload;
     },
-    // подключаем текущего плейлиста из компонентов
+    setTracksSelection(state, action) {
+      state.tracksSelection = action.payload;
+    },
     setCurrentPlaylist(state, action) {
       state.currentPlaylist = action.payload;
     },
-    // подключаем списк любимых треков
-    setIsMyTracks(state, action) {
-      state.isMyTracks = action.payload;
-    },
-
-    // миксуем все треки
     mixTrack(state, action) {
       if (action.payload.isMixing === true) {
-        // Перемешиваем именно currentPlaylist, если он есть, иначе tracks
         const targetList =
           state.currentPlaylist.length > 0
             ? state.currentPlaylist
             : state.tracks;
+
         state.currentPlaylist = shuffleArray(targetList);
 
-        // Опционально: если плейлист перемешан, можно сбросить текущий трек на первый
         if (state.currentPlaylist.length > 0) {
           state.track.currentTrackId = state.currentPlaylist[0]._id;
         }
       }
     },
-    //включаем трек по ID
     setTrackPlayingId(state, action) {
       if (action.payload?.trackId) {
         state.track.currentTrackId = action.payload.trackId;
       }
     },
-    //переключаем следующий трек по ID
     turnTrackPlaying(state, action) {
       const playlist = state.currentPlaylist;
-
-      if (!playlist || playlist.length === 0) {
-        return;
-      }
+      if (!playlist || playlist.length === 0) return;
 
       const currentId = state.track.currentTrackId;
       if (!currentId) return;
@@ -185,7 +180,7 @@ const tracksSlice = createSlice({
       );
 
       if (currentIndex === -1) {
-        console.warn('⚠️ Текущий трек не найден в текущем плейлисте.');
+        console.warn('⚠️ Текущий трек не найден в плейлисте');
         return;
       }
 
@@ -199,12 +194,10 @@ const tracksSlice = createSlice({
       }
 
       const nextTrack = playlist[nextIndex];
-
       if (nextTrack && nextTrack._id) {
         state.track.currentTrackId = nextTrack._id;
       }
     },
-
     toggleTrackLike: (state, action) => {
       const trackId = action.payload.trackId;
       const track = state.tracks.find((t) => t._id === trackId);
@@ -212,56 +205,44 @@ const tracksSlice = createSlice({
         track.trackLike = !track.trackLike;
       }
     },
-
     setPlaylistFromFavorites: (state, action) => {
-      const trackId = action.payload.trackId;
-
-      // 1. Берем все треки, у которых стоит лайк
       const favoriteTracks = state.tracks.filter((t) => t.trackLike === true);
 
       if (favoriteTracks.length === 0) {
-        console.warn('⚠️ Нет избранных треков для формирования плейлиста');
+        console.warn('⚠️ Нет избранных треков');
         return;
       }
 
-      // 2. Сортируем их (например, по ID или имени), чтобы порядок не прыгал
       favoriteTracks.sort((a, b) => String(a._id).localeCompare(String(b._id)));
-
       state.currentPlaylist = favoriteTracks;
 
-      // 3. Сразу ставим переданный трек как текущий (если он есть в списке)
-      const selectedTrack = favoriteTracks.find((t) => t._id === trackId);
+      const selectedTrack = favoriteTracks.find(
+        (t) => t._id === action.payload.trackId
+      );
       if (selectedTrack) {
         state.track.currentTrackId = selectedTrack._id;
-      } else {
-        // Если вдруг трека нет (редкий кейс гонки состояний), берем первый
+      } else if (favoriteTracks.length > 0) {
         state.track.currentTrackId = favoriteTracks[0]._id;
       }
     },
-
-    //включаем состояние проигрывания
     setIsPlaying(state, action) {
       state.track.isPlaying = action.payload;
     },
-    // переключаем состояние проигрывания
     togglePlay(state) {
       state.track.isPlaying = !state.track.isPlaying;
     },
-    // переключаем состояние времени
     setCurrentTime(state, action) {
       state.track.currentTime = action.payload;
     },
-    // переключаем состояние громкости
     setVolume(state, action) {
       state.track.volume = action.payload;
     },
-    // переключаем состояние зациклености
     setLoop(state, action) {
       state.track.isLoop = action.payload;
     },
   },
   extraReducers: (builder) => {
-    // Обработка загрузки всех треков
+    // --- Load Tracks ---
     builder
       .addCase(loadTracks.pending, (state) => {
         state.isLoading = true;
@@ -276,7 +257,24 @@ const tracksSlice = createSlice({
         state.isLoading = false;
         state.error = action.error.message;
       })
-      // загрузка всех избранных
+
+      // --- Load Selection (Подборки) ---
+      .addCase(loadTracksSelection.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(loadTracksSelection.fulfilled, (state, action) => {
+        state.isLoading = false;
+
+        state.tracksSelection = [
+          ...state.tracksSelection,
+          { ...action.payload },
+        ];
+      })
+      .addCase(loadTracksSelection.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message;
+      }) // загрузка всех избранных
       .addCase(loadFavoriteTracks.pending, (state) => {
         state.isLoading = true;
       })
@@ -302,7 +300,6 @@ const tracksSlice = createSlice({
         // action здесь используется для получения сообщения об ошибке
         console.error('Ошибка загрузки избранного:', action.error.message);
       })
-
       // Добавление в избранное (успех)
       .addCase(addTrackToFavorite.fulfilled, (state) => {
         // Успех: состояние уже изменено в toggleTrackLike, ничего делать не надо.
@@ -337,6 +334,7 @@ const tracksSlice = createSlice({
 
 export const {
   setTracks,
+  setTracksSelection,
   mixTrack,
   setTrackPlayingId,
   toggleTrackLike,

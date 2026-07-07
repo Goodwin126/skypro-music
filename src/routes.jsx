@@ -26,7 +26,6 @@ export const AppRoutes = ({ user, onAuthButtonClick }) => {
         element={<MyPlaylist onAuthButtonClick={onAuthButtonClick} />}
       />
 
-      {/* 🔥 Для главной и 404 тоже убираем защиту */}
       <Route path="/*" element={<NotFound />} />
 
       <Route
