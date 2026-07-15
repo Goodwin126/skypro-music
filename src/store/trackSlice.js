@@ -4,9 +4,11 @@ const BASE_URL = 'https://webdev-music-003b5b991590.herokuapp.com/';
 
 const getAuthToken = () => {
   const tokensStr = localStorage.getItem('tokens');
+
   if (!tokensStr) return null;
   try {
     const tokens = JSON.parse(tokensStr);
+
     return tokens.access;
   } catch (e) {
     console.warn('⚠️ Не удалось распарсить токены:', e);
@@ -54,7 +56,9 @@ export const loadTracksSelection = createAsyncThunk(
 export const loadFavoriteTracks = createAsyncThunk(
   'favoriteTracks/loadTracks',
   async () => {
+    //берем токены с локал сторидж и распасиваем, берем только tokens.access
     const token = getAuthToken();
+
     if (!token) throw new Error('Нет токена авторизации');
 
     const response = await fetch(`${BASE_URL}catalog/track/favorite/all/`, {

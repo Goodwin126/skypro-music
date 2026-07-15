@@ -50,8 +50,6 @@ export default function PlaylistItem({
   };
 
   const handleLikeClick = () => {
-    // Блокируем только действие клика, если нет авторизации.
-    // Наведение (hover) мы оставляем доступным, чтобы показать подсказку!
     if (!isAuthorized) {
       return;
     }

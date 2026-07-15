@@ -14,6 +14,7 @@ export const Login = () => {
   const dispatch = useDispatch();
 
   const { login: authLogin } = useAuth();
+
   const { login: tokenLogin } = useToken();
 
   const [sendLoginData, loginResult] = useSendingLoggingDataMutation();
@@ -28,9 +29,13 @@ export const Login = () => {
       e.preventDefault();
 
       try {
+        //запрсо на логин
         await tokenLogin(formData);
-
+        //ответ закидываем на получение токенов
+        console.log('formData = ', formData);
         const userResponse = await sendLoginData(formData).unwrap();
+
+        console.log('userResponse = ', userResponse);
 
         authLogin(userResponse);
 
@@ -41,6 +46,7 @@ export const Login = () => {
         console.error('Ошибка авторизации:', err);
       }
     },
+
     [tokenLogin, sendLoginData, authLogin, navigate, formData]
   );
 

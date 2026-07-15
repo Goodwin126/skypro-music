@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 
@@ -7,6 +7,7 @@ import {
   setCurrentPlaylist,
   toggleTrackLike,
   addTrackToFavorite,
+  loadTracksSelection,
   removeTrackFromFavorite,
 } from '../../store/trackSlice';
 
@@ -18,6 +19,13 @@ import * as S from '../TrackList/styles';
 export default function GenrePlayList() {
   const dispatch = useDispatch();
   const { user } = useAuth();
+
+  // Получаем id из URL
+  const { id: genreId } = useParams();
+
+  useEffect(() => {
+    dispatch(loadTracksSelection({ Selection_Id: genreId }));
+  }, [dispatch, genreId]);
 
   const { tracks, tracksSelection, isLoading } = useSelector(
     (state) => state.storage
@@ -31,9 +39,6 @@ export default function GenrePlayList() {
   const handleTrackClick = (trackId) => {
     dispatch(setTrackPlayingId({ trackId }));
   };
-
-  // Получаем id из URL
-  const { id: genreId } = useParams();
 
   const titlePage = useMemo(() => {
     if (genreId === '2') {
