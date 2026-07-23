@@ -1,40 +1,89 @@
-import React from "react";
-import { render, screen } from "@testing-library/react";
-import SidbarSkeliton from "./index";
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom'; // 1. Импортируем роутер
+import Sidebar from './index';
 
-// Мок стилей — только то, что нужно для компонента
-vi.mock("../SidebarItem/styles", () => ({
-  StyledSidebarItem: (props) => <div {...props} data-testid="styled-item" />,
-  StyledSidebarImg: (props) => (
-    <img
-      {...props}
-      data-testid="skeleton-img"
-      alt="square"
-      src="/img/skelitons/Skeleton_rectangle05.svg"
-    />
+// --- МОКИ (Частичные, чтобы не ломать внутренние импорты) ---
+
+vi.mock('./styles', async () => {
+  const actual = await vi.importActual('./styles');
+  return {
+    ...actual,
+    StyledMainSidebar: (props) => <nav {...props} />,
+    StyledSidebarBlock: (props) => <section {...props} />,
+    StyledSidebarList: (props) => <ul {...props} />,
+  };
+});
+
+vi.mock('../SidebarItem/styles', async () => {
+  const actual = await vi.importActual('../SidebarItem/styles');
+  return {
+    ...actual, // Сохраняем ВСЕ реальные экспорты (включая StyledSidebarLink!)
+    StyledSidebarItem: (props) => <li {...props} data-testid="sidebar-item" />,
+    StyledSidebarImg: (props) => (
+      <img {...props} data-testid="item-img" alt="playlist" />
+    ),
+  };
+});
+
+vi.mock('../SkelitonSidebar', () => ({
+  default: () => (
+    <div data-testid="skeleton-wrapper">
+      <div data-testid="skeleton-img" />
+      <div data-testid="skeleton-img" />
+      <div data-testid="skeleton-img" />
+    </div>
   ),
-  StyledSidebarLink: (props) => <a {...props} data-testid="styled-link" />,
 }));
 
-describe("SidbarSkeliton", () => {
-  it("отрисовывает компонент без ошибок", () => {
-    expect(() => {
-      render(<SidbarSkeliton />);
-    }).not.toThrow();
+// --- МОК КОНТЕКСТА АВТОРИЗАЦИИ ---
+const mockUser = { username: 'Sergey.Ivanov' };
+const mockLogout = vi.fn();
+
+const AuthContext = React.createContext(null);
+
+const AuthContextMock = ({ children }) => (
+  <AuthContext.Provider value={{ user: mockUser, logout: mockLogout }}>
+    {children}
+  </AuthContext.Provider>
+);
+
+// Подменяем хук useAuth
+vi.mock('../../context/AuthContext', async () => {
+  const actual = await vi.importActual('../../context/AuthContext');
+  return {
+    ...actual,
+    useAuth: () => ({ user: mockUser, logout: mockLogout }),
+  };
+});
+
+describe('Sidebar', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it("отображает 3 блока с изображениями скелетона", () => {
-    render(<SidbarSkeliton />);
+  // 2. ИСПРАВЛЕНИЕ ЗДЕСЬ: Добавляем MemoryRouter внутрь обертки
+  const renderWithAuth = (props) => {
+    return render(
+      <MemoryRouter>
+        <AuthContextMock>
+          <Sidebar {...props} />
+        </AuthContextMock>
+      </MemoryRouter>
+    );
+  };
 
-    const images = screen.getAllByTestId("skeleton-img");
-    expect(images).toHaveLength(3);
+  it('корректно рендерит структуру при isLoading=false', () => {
+    renderWithAuth({ isLoading: false });
 
-    images.forEach((image) => {
-      expect(image).toHaveAttribute(
-        "src",
-        "/img/skelitons/Skeleton_rectangle05.svg",
-      );
-      expect(image).toHaveAttribute("alt", "square");
-    });
+    expect(screen.getAllByTestId('sidebar-item')).toHaveLength(3);
+    expect(screen.queryByTestId('skeleton-wrapper')).not.toBeInTheDocument();
+  });
+
+  it('показывает скелетон при isLoading=true', () => {
+    renderWithAuth({ isLoading: true });
+
+    expect(screen.getAllByTestId('skeleton-wrapper')).toHaveLength(1);
+    expect(screen.queryAllByTestId('sidebar-item').length).toBe(0);
   });
 });

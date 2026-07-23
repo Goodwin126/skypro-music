@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled from 'styled-components';
 
 export const StyledCenterblockFilter = styled.div`
   display: flex;
@@ -47,7 +47,7 @@ export const StyledSearchByItem = styled.div`
   cursor: pointer;
 
   &:hover {
-    color: rgba(182, 114, 255, 1);
+    color: #d9b6ff;
     font-family: StratosSkyeng;
     font-weight: 400;
     font-style: Regular;
@@ -56,6 +56,16 @@ export const StyledSearchByItem = styled.div`
     text-decoration: underline;
     text-decoration-style: solid;
   }
+  &:active {
+    color: #ad61ff;
+  }
+
+  ${({ $isActive }) =>
+    $isActive &&
+    `
+    color: #b672ff; /* Цвет активного жанра */
+    text-decoration: none;
+  `}
 `;
 
 export const StyledBtnText = styled.div`
@@ -80,8 +90,33 @@ export const StyledFilterButton = styled(StyledBtnText)`
   border: 1px solid #ffffff;
   border-radius: 60px;
   padding: 6px 20px;
+  position: relative; /* важно для позиционирования счётчика */
 
   &:not(:last-child) {
     margin-right: 10px;
   }
+
+  ${({ $isActive }) =>
+    $isActive &&
+    `
+    border-color: #b672ff;
+    color: #b672ff;
+  `}
+`;
+
+export const StyledGenreCounter = styled.div`
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #b672ff;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
 `;

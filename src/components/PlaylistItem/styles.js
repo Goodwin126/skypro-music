@@ -1,9 +1,10 @@
-import { styled } from "styled-components";
+import { styled } from 'styled-components';
 
 export const StyledPlaylistItem = styled.div`
   width: 100%;
   display: block;
   margin-bottom: 12px;
+  overflow: visible;
 `;
 
 export const StyledPlaylistTrack = styled.div`
@@ -11,6 +12,8 @@ export const StyledPlaylistTrack = styled.div`
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  /* Тоже важно для цепочки позиционирования */
+  overflow: visible;
 `;
 
 export const StyledTrackTitle = styled.div`
@@ -29,13 +32,13 @@ export const StyledTrackTitleImage = styled.div`
   justify-content: center;
   margin-right: 17px;
   border-radius: 4px;
+  overflow: visible;
 `;
 
 export const StyledTrackTitleSvg = styled.svg`
   display: block;
   width: 18px;
   height: 17px;
-
   margin: 0 auto;
   overflow: visible;
 `;
@@ -64,6 +67,7 @@ export const StyledTrackTitleLink = styled.a`
   font-size: 16px;
   line-height: 24px;
   color: #ffffff;
+  text-decoration: none;
 `;
 
 export const StyledTrackAlbumLink = styled.a`
@@ -72,6 +76,7 @@ export const StyledTrackAlbumLink = styled.a`
   font-size: 16px;
   line-height: 24px;
   color: #696969;
+  text-decoration: none;
 `;
 
 export const StyledTrackTitleSpan = styled.span`
@@ -89,6 +94,7 @@ export const StyledTrackAuthorLink = styled.a`
   line-height: 24px;
   color: #ffffff;
   text-align: left;
+  text-decoration: none;
 `;
 
 export const StyledTrackTimeSvg = styled.svg`
@@ -98,6 +104,12 @@ export const StyledTrackTimeSvg = styled.svg`
   fill: transparent;
   stroke: #696969;
   margin-right: 17px;
+
+  &:hover {
+    stroke: #acacac;
+  }
+
+  overflow: visible;
 `;
 
 export const StyledtrackTimeText = styled.span`
@@ -111,4 +123,5 @@ export const StyledtrackTimeText = styled.span`
 
 export const StyledTrackTime = styled.div`
   display: flex;
+  overflow: visible;
 `;

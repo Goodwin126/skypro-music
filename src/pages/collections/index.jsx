@@ -1,10 +1,16 @@
-import { useParams } from "react-router-dom";
+import React from 'react';
+import PageLayout from '../../components/PageLayout';
+import GenrePlayList from '../../components/GenrePlayList';
+import Sidebar from '../../components/Sidebar';
 
-export const Collections = () => {
-  const params = useParams();
+export const Collections = (onAuthButtonClick) => {
   return (
     <div>
-      <h1> Collection № {params.id}</h1>
+      <PageLayout
+        onAuthButtonClick={onAuthButtonClick}
+        Playlist={GenrePlayList}
+        Sidebar={Sidebar}
+      />
     </div>
   );
 };

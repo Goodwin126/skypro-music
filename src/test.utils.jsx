@@ -1,71 +1,93 @@
-import { configureStore } from "@reduxjs/toolkit";
-import tracksReducer from "./store/trackSlice";
+import { render } from '@testing-library/react';
+import { Provider as ReduxProvider } from 'react-redux';
+import { BrowserRouter } from 'react-router-dom';
+import { configureStore } from '@reduxjs/toolkit';
+import tracksReducer from '../src/store/trackSlice';
 
-import { render } from "@testing-library/react";
-import { Provider } from "react-redux";
+// --- СОЗДАЕМ ЗАГЛУШКИ (MOCK PROVIDERS) ---
+// Они ничего не делают, но позволяют компонентам вызывать useAuth/useToken без ошибки
+const MockAuthProvider = ({ children }) => <>{children}</>;
+const MockTokenProvider = ({ children }) => <>{children}</>;
 
-// 1. Сохраняем старый простой store для обратной совместимости
 export const createSimpleMockStore = () => {
   const emptyReducer = (state = {}) => state;
   return configureStore({
     reducer: { dummy: emptyReducer },
     middleware: (gdm) =>
-      gdm({
-        serializableCheck: false,
-        immutableCheck: false,
-      }),
+      gdm({ serializableCheck: false, immutableCheck: false }),
   });
 };
 
-// 2. Добавляем новый store с полной структурой
 export const createTestStoreWithTracks = (preloadedState = {}) => {
   const initialState = {
     storage: {
       user: null,
-      userError: null,
       tracks: [],
-      isMyTracks: false,
+      tracksSelection: [],
+      currentPlaylist: [],
       track: {
-        trackPlaying: null,
+        currentTrackId: null,
         isPlaying: false,
         isMixing: false,
-        currentTime: 0,
-        volume: 1,
-        isLoop: false,
       },
       isLoading: false,
       error: null,
     },
   };
-
   return configureStore({
     reducer: { storage: tracksReducer },
     preloadedState: { ...initialState, ...preloadedState },
     middleware: (gdm) =>
-      gdm({
-        serializableCheck: false,
-        immutableCheck: false,
-      }),
+      gdm({ serializableCheck: false, immutableCheck: false }),
   });
 };
 
-// 3. Обновляем customRender — теперь он принимает тип store
 export const customRender = (
   ui,
-  { storeType = "simple", preloadedState, ...options } = {},
+  {
+    storeType = 'simple',
+    preloadedState,
+    initialEntries = ['/'],
+    // Добавляем флаг, если вдруг захочешь отключить моки провайдеров (редко нужно)
+    skipAuthMock = false,
+    ...options
+  } = {}
 ) => {
   let store;
 
   switch (storeType) {
-    case "tracks":
+    case 'tracks':
       store = createTestStoreWithTracks(preloadedState);
       break;
     default:
       store = createSimpleMockStore();
   }
 
-  const Wrapper = ({ children }) => (
-    <Provider store={store}>{children}</Provider>
-  );
+  // ИСПРАВЛЕНИЕ ЗДЕСЬ: Добавляем MockAuthProvider и MockTokenProvider
+  const Wrapper = ({ children }) => {
+    if (skipAuthMock) {
+      return (
+        <ReduxProvider store={store}>
+          <BrowserRouter initialEntries={initialEntries}>
+            {children}
+          </BrowserRouter>
+        </ReduxProvider>
+      );
+    }
+
+    return (
+      <ReduxProvider store={store}>
+        <BrowserRouter initialEntries={initialEntries}>
+          {/* Эти провайдеры предотвращают ошибку "useAuth must be used within AuthProvider" */}
+          <MockAuthProvider>
+            <MockTokenProvider>{children}</MockTokenProvider>
+          </MockAuthProvider>
+        </BrowserRouter>
+      </ReduxProvider>
+    );
+  };
+
   return render(ui, { wrapper: Wrapper, ...options });
 };
+
+export * from '@testing-library/react';

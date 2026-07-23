@@ -1,11 +1,15 @@
-import { styled } from "styled-components";
+import { styled } from 'styled-components';
 
 export const StyledMainCenterblock = styled.div`
-  width: auto;
+  width: 100%;
   flex-grow: 3;
-  padding: 20px 40px 20px 111px;
-`;
 
+  /* БЫЛО: padding: 20px 40px 20px 111px; (создавало отступы по бокам) */
+  /* СТАЛО: оставляем только вертикальные отступы и отступ слева, если он нужен для текста */
+  padding: 40px 0 20px 111px;
+
+  box-sizing: border-box;
+`;
 export const StyledCenterblockSearch = styled.div`
   width: 100%;
   border-bottom: 1px solid #4e4e4e;
@@ -102,5 +106,5 @@ export const StyledplaylistTitleSvg = styled.svg`
 export const StyledContentPlaylist = styled.div`
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  width: 100%;
 `;

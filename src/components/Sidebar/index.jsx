@@ -1,15 +1,13 @@
-import * as S from "./styles";
-import SideBarPersonal from "../sideBarPersonal";
-import SidebarItem from "../SidebarItem";
-import SidbarSkeliton from "../SkelitonSidebar";
+import React from 'react';
+import * as S from './styles';
+import SideBarPersonal from '../sideBarPersonal';
+import SidebarItem from '../SidebarItem';
+import SidbarSkeliton from '../SkelitonSidebar';
 
-export default function Sidebar({ isLoading, onAuthButtonClick }) {
+export default function Sidebar({ isLoading }) {
   return (
     <S.StyledMainSidebar role="region" aria-label="Main sidebar">
-      <SideBarPersonal
-        sprite="/img/icon/sprite.svg"
-        onAuthButtonClick={onAuthButtonClick}
-      />
+      <SideBarPersonal sprite="/img/icon/sprite.svg" />
 
       <S.StyledSidebarBlock role="region" aria-label="sidebar block">
         <S.StyledSidebarList>
@@ -17,9 +15,9 @@ export default function Sidebar({ isLoading, onAuthButtonClick }) {
             <SidbarSkeliton />
           ) : (
             <div>
-              <SidebarItem playlist="/img/playlist01.png" id="1" />
-              <SidebarItem playlist="/img/playlist02.png" id="2" />
-              <SidebarItem playlist="/img/playlist03.png" id="3" />
+              <SidebarItem playlist="/img/playlist01.png" id="2" />
+              <SidebarItem playlist="/img/playlist02.png" id="3" />
+              <SidebarItem playlist="/img/playlist03.png" id="4" />
             </div>
           )}
         </S.StyledSidebarList>

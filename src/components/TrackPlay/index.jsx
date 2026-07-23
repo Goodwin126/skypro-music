@@ -1,10 +1,11 @@
-import * as S from "./styles";
+import React from 'react';
+import * as S from './styles';
 
 // Функция для обрезки строки с добавлением многоточия
 const truncateText = (text, maxLength) => {
-  if (!text) return "";
+  if (!text) return '';
   if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength) + "...";
+  return text.slice(0, maxLength) + '...';
 };
 
 export default function TrackPlay({ trackName, trackAuthor }) {

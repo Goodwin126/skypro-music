@@ -1,224 +1,198 @@
-import * as S from "./styles";
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React from 'react';
+import * as S from './styles';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { useAuth } from '../../context/AuthContext';
 import {
   mixTrack,
   turnTrackPlaying,
   setIsPlaying,
-} from "../../store/trackSlice";
+  toggleTrackLike,
+  addTrackToFavorite,
+  removeTrackFromFavorite,
+} from '../../store/trackSlice';
 
-import TrackPlay from "../TrackPlay";
-import SkelitonAudioPlay from "../SkelitonAudioPlayer";
-import ProgressBar from "../ProgressBar";
+import TrackPlay from '../TrackPlay';
+import SkelitonAudioPlay from '../SkelitonAudioPlayer';
+import ProgressBar from '../ProgressBar';
 
 export default function AudioPlayer() {
-  //состояние згрузки и треки
+  const { user } = useAuth();
   const { isLoading, tracks } = useSelector((state) => state.storage);
-
-  //состояние проигрывания
+  const currentTrackId = useSelector(
+    (state) => state.storage.track.currentTrackId
+  );
   const isPlaying = useSelector((state) => state.storage.track.isPlaying);
-
-  //состояние путь к треку
-  const [pathTrack, setPathTrack] = useState(null);
-
-  //состояние микса треков
-  const [isMixing, setIsMixing] = useState(false);
-
-  // состояние громкости
   const [volume, setVolume] = useState(0.7);
-
-  // состояние зациклености
   const [isLoop, setLoop] = useState(false);
-
-  //  состояние время проигрывания трека
   const [currentTime, setCurrentTime] = useState(0);
-
-  //  //  состояние время паузы трека
-  // const [currentTime, setCurrentTime] = useState(0);
-
-  // состояние названия трека
-  const [trackName, setTrackName] = useState("Неизвестный трек"); // инициализируем значением по умолчанию
-  // состояние автора трека
-  const [trackAuthor, setTrackAuthor] = useState("Неизвестный автор"); // инициализируем значением по умолчанию
-
-  // Сохраняем currentTrack в состоянии
+  // Инициализируем null, чтобы явно видеть отсутствие трека
   const [currentTrack, setCurrentTrack] = useState(null);
 
   const dispatch = useDispatch();
-
   const audioRef = useRef(null);
 
-  const nameTrackPlaying = useSelector(
-    (state) => state.storage.track.trackPlaying,
-  );
+  // 1. Находим объект трека
+  useEffect(() => {
+    if (currentTrackId && tracks.length > 0) {
+      const foundTrack = tracks.find((t) => t._id === currentTrackId);
+      if (foundTrack) {
+        setCurrentTrack(foundTrack);
+      }
+    } else {
+      setCurrentTrack(null);
+    }
+  }, [currentTrackId, tracks]);
 
-  // обновляем currentTrack при смене nameTrackPlaying
-  useMemo(() => {
-    if (tracks.length === 0) return;
-    const foundTrack = tracks.find(
-      (track) => track.trackName === nameTrackPlaying,
-    );
-    setCurrentTrack(foundTrack);
-  }, [tracks, nameTrackPlaying]);
-
-  // логика загрузки и настройки трека
+  // 2. Подготовка трека (SRC)
+  // 2. Подготовка трека (Меняет SRC ТОЛЬКО если трек сменился!)
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !nameTrackPlaying) return;
+    if (!audio || !currentTrack) return;
 
-    // обновляем путь к треку
-    const newPath = `/music/${nameTrackPlaying}.mp3`;
-    setPathTrack(newPath);
+    // Получаем текущий src из аудио элемента
+    const currentSrc = audio.src;
+    const newSrc = currentTrack.track_file;
 
-    // загружаем новый трек
-    audio.src = newPath;
+    // Если трек тот же самый (src совпадает) — выходим, чтобы не сбрасывать время и не перезагружать файл
+    if (currentSrc === newSrc) {
+      return;
+    }
 
-    const handleEnded = () => {
-      dispatch(turnTrackPlaying({ next: true })); // переходим к следующему треку
-    };
-    const handleCanPlay = async () => {
-      try {
-        await audio.play();
-      } catch (err) {
-        console.error("Не удалось запустить воспроизведение:", err);
-        dispatch(setIsPlaying(false));
-      }
+    // Если трек сменился:
+    audio.currentTime = 0;
+    audio.src = newSrc;
+
+    const handleEnded = async () => {
+      dispatch(setIsPlaying(false));
+      dispatch(turnTrackPlaying({ next: true }));
     };
 
     const handleError = () => {
-      console.error("Не удалось загрузить трек:", newPath);
+      console.error(
+        'Ошибка загрузки:',
+        currentTrack.name || 'Неизвестный трек'
+      );
       dispatch(setIsPlaying(false));
     };
 
-    // подключаем обработчики
-    audio.addEventListener("ended", handleEnded);
-    audio.addEventListener("canplaythrough", handleCanPlay);
-    audio.addEventListener("error", handleError);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
 
-    // очистка обработчиков при смене трека или размонтировании
     return () => {
-      audio.removeEventListener("ended", handleEnded);
-      audio.removeEventListener("canplaythrough", handleCanPlay);
-      audio.removeEventListener("error", handleError);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
     };
-  }, [nameTrackPlaying, dispatch]);
+  }, [currentTrack, dispatch]);
 
-  // обновление метаданных — зависит от currentTrack
+  // Автоплей при готовности файла
   useEffect(() => {
-    if (!currentTrack) return;
-    // обновляем метаданные только при наличии трека
-    setTrackName(currentTrack.trackTitle ?? "Неизвестный трек");
-    setTrackAuthor(currentTrack.trackAuthor ?? "Неизвестный автор");
-  }, [currentTrack]);
-  // независимое управление воспроизведением
-  const handlePlay = useCallback(async () => {
     const audio = audioRef.current;
-    if (!audio || !pathTrack) return; // проверяем наличие трека
+    if (!audio || !currentTrack) return;
 
-    try {
-      // Сначала ждём готовности аудио
-      await new Promise((resolve) => {
-        const onCanPlay = () => {
-          audio.removeEventListener("canplaythrough", onCanPlay);
-          resolve();
-        };
-        audio.addEventListener("canplaythrough", onCanPlay);
-
-        // Если уже готово, сразу разрешаем
-        if (audio.readyState >= 3) {
-          resolve();
-        }
-      });
-
-      // Теперь устанавливаем время и запускаем воспроизведение
-      if (currentTime !== 0) {
-        audio.currentTime = currentTime;
+    const onCanPlayThrough = async () => {
+      try {
+        await audio.play();
+        dispatch(setIsPlaying(true));
+      } catch (error) {
+        if (error.name !== 'NotAllowedError') console.error(error);
       }
-      await audio.play();
-      dispatch(setIsPlaying(true));
-    } catch (err) {
-      console.error("Ошибка воспроизведения:", err);
-      dispatch(setIsPlaying(false));
-    }
-  }, [pathTrack, dispatch, currentTime]);
+    };
 
-  const handlePause = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    audio.addEventListener('canplaythrough', onCanPlayThrough, { once: true });
+    return () => audio.removeEventListener('canplaythrough', onCanPlayThrough);
+  }, [currentTrack, dispatch]);
 
-    // Сначала считываем текущее время ДО паузы
-    const current = audio.currentTime;
-    setCurrentTime(current); // Сохраняем в состояние
-    audio.pause(); // Ставим на паузу
-    dispatch(setIsPlaying(false)); // Обновляем состояние проигрывания
-  }, [dispatch]);
-
-  // переключение между play/pause
-  const togglePlay = useCallback(() => {
-    isPlaying ? handlePause() : handlePlay();
-  }, [isPlaying, handlePlay, handlePause]);
-
-  // обработчик изменения времени
+  // Синхронизация кнопки Play/Pause
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleTimeUpdate = () => {
-      // Только если аудио активно воспроизводится
-      if (!isPlaying) return;
-      setCurrentTime(audio.currentTime);
-    };
-    audio.addEventListener("timeupdate", handleTimeUpdate);
-
-    return () => audio.removeEventListener("timeupdate", handleTimeUpdate);
+    if (isPlaying) {
+      audio.play().catch(() => console.warn('Автоплей заблокирован браузером'));
+    } else {
+      audio.pause();
+    }
   }, [isPlaying]);
 
-  // Обработка громкости
+  // Прогресс бар
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
+    audio.addEventListener('timeupdate', handleTimeUpdate);
+    return () => audio.removeEventListener('timeupdate', handleTimeUpdate);
+  }, []);
+
+  // --- Handlers ---
+
+  const togglePlay = useCallback(() => {
+    dispatch(setIsPlaying(!isPlaying));
+  }, [isPlaying, dispatch]);
+
   const handleVolumeChange = useCallback((e) => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-    }
+    if (audioRef.current) audioRef.current.volume = newVolume;
   }, []);
 
-  // Обработка зацикливания
   const handleLoop = useCallback(() => {
-    setLoop((prev) => !prev);
-  }, []);
-
-  // Заглушка для нереализованных функций
-  const handleNotWork = useCallback(() => {
-    alert("Эта функция пока не реализована.");
-  }, []);
-
-  // Синхронизация loop с аудио
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.loop = isLoop;
-    }
+    const newLoopState = !isLoop;
+    setLoop(newLoopState);
+    if (audioRef.current) audioRef.current.loop = newLoopState;
   }, [isLoop]);
+
+  const handleLike = useCallback(async () => {
+    if (!currentTrack) return;
+
+    // 🔥 ГЛАВНАЯ ПРОВЕРКА
+    if (!user) {
+      return;
+    }
+
+    const { _id, trackLike } = currentTrack;
+
+    // Локально переключаем сразу
+    dispatch(toggleTrackLike({ trackId: _id }));
+
+    try {
+      if (!trackLike) {
+        await dispatch(addTrackToFavorite({ trackId: _id })).unwrap();
+      } else {
+        await dispatch(removeTrackFromFavorite({ trackId: _id })).unwrap();
+      }
+    } catch (error) {
+      console.error('Ошибка синхронизации лайка:', error);
+      // Откатываем локальное состояние, если сервер упал
+      dispatch(toggleTrackLike({ trackId: _id }));
+    }
+  }, [currentTrack, user, dispatch]); // user добавлен в зависимости!
+
+  // 3. Функция шаффла (которую ESLint ругал за отсутствие)
+  const handleShuffle = useCallback(() => {
+    dispatch(mixTrack({ isMixing: true }));
+  }, [dispatch]); // dispatch обязательно в зависимостях
 
   return (
     <S.StyledBar data-testid="audio-player">
-      <audio ref={audioRef}>
-        <source src={pathTrack} type="audio/mpeg" />
-      </audio>
+      <audio ref={audioRef} loop={isLoop} />
+
       <S.StyledBarContent>
         <ProgressBar audio={audioRef.current} currentTime={currentTime} />
+
         <S.StyledBarPlayerBlock>
           <S.StyledBarBarPlayer>
             <S.StyledPlayerControls>
               <S.StyledPlayerBtnPrev>
                 <S.StyledPlayerBtnPrevSvg
                   alt="prev"
-                  onClick={() => {
-                    dispatch(turnTrackPlaying({ next: false }));
-                  }}
+                  onClick={() => dispatch(turnTrackPlaying({ next: false }))}
                 >
                   <use href="/img/icon/sprite.svg#icon-prev" />
                 </S.StyledPlayerBtnPrevSvg>
               </S.StyledPlayerBtnPrev>
+
               <S.StyledPlayerBtnPlay disabled={isLoading}>
                 <S.StyledPlayerBtnPlaySvg alt="play" onClick={togglePlay}>
                   {isPlaying ? (
@@ -240,71 +214,80 @@ export default function AudioPlayer() {
                   )}
                 </S.StyledPlayerBtnPlaySvg>
               </S.StyledPlayerBtnPlay>
+
               <S.StyledPlayerBtnNext>
                 <S.StyledPlayerBtnNextSvg
                   alt="next"
-                  onClick={() => {
-                    dispatch(turnTrackPlaying({ next: true }));
-                  }}
+                  onClick={() => dispatch(turnTrackPlaying({ next: true }))}
                 >
                   <use href="/img/icon/sprite.svg#icon-next" />
                 </S.StyledPlayerBtnNextSvg>
               </S.StyledPlayerBtnNext>
+
               <S.StyledPlayerBtnRepeat>
                 <S.StyledPlayerBtnRepeatSvg
                   alt="Включить повтор"
                   onClick={handleLoop}
+                  style={{ opacity: isLoop ? 1 : 0.5 }}
                 >
-                  <use
-                    href="/img/icon/sprite.svg#icon-repeat"
-                    stroke={isLoop ? "white" : "grey"}
-                  />
+                  <use href="/img/icon/sprite.svg#icon-repeat" />
                 </S.StyledPlayerBtnRepeatSvg>
               </S.StyledPlayerBtnRepeat>
+
               <S.StyledPlayerBtnShuffle>
                 <S.StyledplayerBtnShuffleSvg
                   alt="shuffle"
-                  onClick={() => {
-                    dispatch(mixTrack({ isMixing }));
-                    setIsMixing(!isMixing);
-                  }}
+                  onClick={handleShuffle}
+                  style={{ opacity: isPlaying ? 1 : 0.5 }}
                 >
-                  <use
-                    href="/img/icon/sprite.svg#icon-shuffle"
-                    stroke={isMixing ? "white" : "grey"}
-                  />
+                  <use href="/img/icon/sprite.svg#icon-shuffle" />
                 </S.StyledplayerBtnShuffleSvg>
               </S.StyledPlayerBtnShuffle>
             </S.StyledPlayerControls>
+
             {isLoading ? (
               <SkelitonAudioPlay />
             ) : (
-              <TrackPlay trackName={trackName} trackAuthor={trackAuthor} />
+              // Безопасный доступ к данным трека
+              <TrackPlay
+                trackName={currentTrack?.name || 'Неизвестный трек'}
+                trackAuthor={currentTrack?.author || 'Неизвестный автор'}
+              />
             )}
+
             <S.StyledTrackPlayLikeDis>
               <S.StyledTrackPlayLike>
-                <S.StyledTrackPlayLikeSvg alt="like" onClick={handleNotWork}>
-                  <use href="/img/icon/sprite.svg#icon-like" />
+                <S.StyledTrackPlayLikeSvg
+                  alt="like"
+                  onClick={handleLike}
+                  style={{
+                    opacity: user ? 1 : 0.4,
+                    cursor: user ? 'pointer' : 'not-allowed',
+
+                    // Фильтр цвета (работает только если кнопка активна, но opacity все равно приглушит)
+                    filter: currentTrack?.trackLike
+                      ? 'brightness(0) invert(1)'
+                      : 'none',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <use
+                    href={
+                      currentTrack?.trackLike
+                        ? '/img/icon/sprite.svg#icon-like-press'
+                        : '/img/icon/sprite.svg#icon-like'
+                    }
+                  />
                 </S.StyledTrackPlayLikeSvg>
               </S.StyledTrackPlayLike>
-              <S.StyledTrackPlayDisLike>
-                <S.StyledTrackPlayDislikeSvg
-                  alt="dislike"
-                  onClick={handleNotWork}
-                >
-                  <use href="/img/icon/sprite.svg#icon-dislike" />
-                </S.StyledTrackPlayDislikeSvg>
-              </S.StyledTrackPlayDisLike>
             </S.StyledTrackPlayLikeDis>
           </S.StyledBarBarPlayer>
+
           <S.StyledBarVolumeBlock>
             <S.StyledVolumeContent>
               <S.StyledVolumeImage>
                 <S.StyledVolumeSvg alt="volume">
-                  <use
-                    href="/img/icon/sprite.svg#icon-volume"
-                    onClick={handleNotWork}
-                  />
+                  <use href="/img/icon/sprite.svg#icon-volume" />
                 </S.StyledVolumeSvg>
               </S.StyledVolumeImage>
               <S.StyledVolumeProgress>

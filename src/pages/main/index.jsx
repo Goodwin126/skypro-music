@@ -1,13 +1,8 @@
-import PageLayout from "../../components/PageLayout";
-import TrackList from "../../components/TrackList";
-import Sidebar from "../../components/Sidebar";
+import React from 'react';
+import PageLayout from '../../components/PageLayout';
+import TrackList from '../../components/TrackList';
+import Sidebar from '../../components/Sidebar';
 
-export function Main({ onAuthButtonClick }) {
-  return (
-    <PageLayout
-      onAuthButtonClick={onAuthButtonClick}
-      Sidebar={Sidebar}
-      Playlist={TrackList}
-    />
-  );
+export function Main() {
+  return <PageLayout Sidebar={Sidebar} Playlist={TrackList} />;
 }
